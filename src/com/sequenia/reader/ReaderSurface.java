@@ -44,6 +44,11 @@ public class ReaderSurface extends GestureSurface {
 		
 	}
 	
+	private void moveCanvas(float dx, float dy) {
+		currentX += dx;
+		currentY += dy;
+	}
+	
 	private void scaleCanvas(float dScale, PointF focus) {
 		scaleFactor *= dScale;
 		
@@ -51,8 +56,10 @@ public class ReaderSurface extends GestureSurface {
 		PointF vecToPos = new PointF(currentX - focus.x, currentY - focus.y);
 		
 		float vecMultiplyer = dScale - 1;
-		currentX += vecToPos.x * vecMultiplyer;
-		currentY += vecToPos.y * vecMultiplyer;
+		float dx = vecToPos.x * vecMultiplyer;
+		float dy = vecToPos.y * vecMultiplyer;
+		
+		moveCanvas(dx, dy);
 	}
 	
 	@Override
@@ -70,8 +77,7 @@ public class ReaderSurface extends GestureSurface {
 				float dx = x - prevX;
 				float dy = y - prevY;
 				
-				currentX += dx;
-				currentY += dy;
+				moveCanvas(dx, dy);
 			}
 
 			break;
