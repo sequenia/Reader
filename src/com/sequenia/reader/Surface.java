@@ -3,22 +3,27 @@ package com.sequenia.reader;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.support.v4.view.GestureDetectorCompat;
+import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 	private Context context;
 	private DrawThread drawThread;
+	
+	ScaleGestureDetector mScaleDetector;
+	GestureDetectorCompat mDetector;
 
 	private boolean created = false;
 
 	public Surface(Context _context) {
 		super(_context);
 
+		getHolder().addCallback(this); // Получаем объект SurfaceHolder, который предоставляет canvas для отрисовки
+		
 		context = _context;
 		drawThread = null;
-
-		getHolder().addCallback(this); // Получаем объект SurfaceHolder, который предоставляет canvas для отрисовки
 	}
 
 	@Override
