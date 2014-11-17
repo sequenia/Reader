@@ -60,7 +60,7 @@ public class GestureSurface extends Surface {
 		@Override
 		public boolean onScale(ScaleGestureDetector detector) {
 			onSurfaceScale(detector);
-			return super.onScale(detector);
+			return true; //super.onScale(detector);
 		}
 		
 		@Override
