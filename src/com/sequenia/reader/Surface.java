@@ -106,4 +106,12 @@ public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 	        }
 	    }
 	}
+	
+	public Context getSurfaceContext() {
+		return context;
+	}
+	
+	public void setSurfaceContext(Context _context) {
+		context = _context;
+	}
 }
