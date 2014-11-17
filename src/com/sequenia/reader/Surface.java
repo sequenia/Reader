@@ -3,17 +3,12 @@ package com.sequenia.reader;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.support.v4.view.GestureDetectorCompat;
-import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 	private Context context;
 	private DrawThread drawThread;
-	
-	ScaleGestureDetector mScaleDetector;
-	GestureDetectorCompat mDetector;
 
 	private boolean created = false;
 
@@ -45,6 +40,7 @@ public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 		canvas.drawColor(Color.rgb((int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
 	}
 	
+	// Вызвать в onPause у Activity
 	public void stopDrawThread() {
 		if(drawThread != null) {
 			boolean retry = true;
@@ -63,6 +59,7 @@ public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 		}
 	}
 	
+	// Вызвать в onResume у Activity
 	public void runDrawThread() {
 		if(drawThread == null && created == true) {
 			drawThread = new DrawThread(getHolder());

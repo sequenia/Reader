@@ -6,13 +6,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends ActionBarActivity {
-	Surface surface;
+	GestureSurface surface;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		surface = new Surface(this);
+		surface = new GestureSurface(this);
 		
 		setContentView(surface);
 	}
