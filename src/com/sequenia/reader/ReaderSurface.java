@@ -1,14 +1,19 @@
 package com.sequenia.reader;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.PointF;
+import android.graphics.Rect;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.SurfaceHolder;
+import android.view.Window;
 
 public class ReaderSurface extends GestureSurface {
 	public static enum ReaderState {
-		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION
+		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING
 	}
 	Translation translation;
 
@@ -20,7 +25,11 @@ public class ReaderSurface extends GestureSurface {
 	float prevX = 0.0f;
 	float prevY = 0.0f;
 	float scaleFactor = 1.0f;
-	private int mActivePointerId = 0;	
+	float scaleVelocity = 1.0f;
+	private int mActivePointerId = 0;
+	
+	float screenHeight;
+	float screenWidth;
 
 	ReaderSettings settings;
 
@@ -31,6 +40,15 @@ public class ReaderSurface extends GestureSurface {
 		state = ReaderState.NOTHING;
 		reader = new Reader(settings);
 		translation = null;
+	}
+	
+	@Override
+	public void surfaceCreated(SurfaceHolder arg0) {
+		PointF screenSize = getScreenSize(getSurfaceContext());
+		screenWidth = screenSize.x;
+		screenHeight = screenSize.y;
+
+		super.surfaceCreated(arg0);
 	}
 	
 	@Override
@@ -48,12 +66,32 @@ public class ReaderSurface extends GestureSurface {
 		
 		switch (state) {
 		case ACCEL_TRANSLATION:
-			PointF distance = ((AccelTranslation) translation).move(time);
+			AccelTranslation accelTranslation = (AccelTranslation) translation;
+			PointF distance = accelTranslation.move(time);
 			
-			currentX += distance.x;
-			currentY += distance.y;
+			if(accelTranslation.directionChanged) {
+				state = ReaderState.NOTHING;
+				translation = null;
+			} else {
+				currentX += distance.x;
+				currentY += distance.y;
+			}
 			break;
 
+		case ACCEL_SCALING:
+			AccelScaling accelScaling = (AccelScaling) translation;
+			float scale = accelScaling.move(time);
+			
+			if(accelScaling.directionChanged) {
+				state = ReaderState.NOTHING;
+				translation = null;
+			} else {
+				float focusX = screenWidth / 2.0f;
+				float focusY = screenHeight / 2.0f;
+				scaleCanvas(scale, new PointF(focusX, focusY));
+			}
+			break;
+			
 		default:
 			break;
 		}
@@ -86,7 +124,7 @@ public class ReaderSurface extends GestureSurface {
 		
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_MOVE:
-			if(state != ReaderState.SCALING && state != ReaderState.ACCEL_TRANSLATION && !activePointerIdChanged) {
+			if((state == ReaderState.NOTHING || state == ReaderState.TRANSLATION) && !activePointerIdChanged) {
 				state = ReaderState.TRANSLATION;
 
 				float dx = x - prevX;
@@ -97,8 +135,12 @@ public class ReaderSurface extends GestureSurface {
 
 			break;
 			
+		case MotionEvent.ACTION_DOWN:
+			state = ReaderState.NOTHING;
+			break;
+
 		case MotionEvent.ACTION_UP:
-			if(state != ReaderState.ACCEL_TRANSLATION) {
+			if(state == ReaderState.TRANSLATION) {
 				state = ReaderState.NOTHING;
 			}
 			break;
@@ -112,34 +154,56 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	@Override
-	public void onSurfaceScale(ScaleGestureDetector detector) {
-		float dScale = detector.getScaleFactor();
-		PointF focus = new PointF(detector.getFocusX(), detector.getFocusY());
-		scaleCanvas(dScale, focus);
-	}
-	
-	@Override
 	public void onSurfaceScaleBegin(ScaleGestureDetector detector) {
 		state = ReaderState.SCALING;
 	}
 	
 	@Override
+	public void onSurfaceScale(ScaleGestureDetector detector) {
+		float dScale = detector.getScaleFactor();
+		PointF focus = new PointF(detector.getFocusX(), detector.getFocusY());
+		scaleVelocity = (float) Math.pow(dScale, 1.0f / ((float)detector.getTimeDelta() / 1000.0f));
+		
+		scaleCanvas(dScale, focus);
+	}
+	
+	@Override
 	public void onSurfaceScaleEnd(ScaleGestureDetector detector) {
-		state = ReaderState.NOTHING;
+		if(scaleVelocity < 0.05f) {
+			scaleVelocity = 0.05f;
+		}
+		
+		if(scaleVelocity > 20.0f) {
+			scaleVelocity = 20.0f;
+		}
+		
+		if(scaleVelocity < 1.0 / settings.accelScaleSensivity || scaleVelocity > 1.0 * settings.accelScaleSensivity) {
+			float accel = settings.scaleAccel;
+			if(scaleVelocity < 1.0f) {
+				accel = 1.0f / accel;
+			}
+			
+			translation = new AccelScaling(scaleVelocity, accel);
+			state = ReaderState.ACCEL_SCALING;
+		} else {
+			state = ReaderState.NOTHING;
+		}
 	}
 	
 	@Override
 	public void onSurfaceFling(MotionEvent e1, MotionEvent e2, float velocityX,
 			float velocityY) {
-		float velocityValue = (float) Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-		float normalVelocityX = velocityX / velocityValue;
-		float normalVelocityY = velocityY / velocityValue;
-		
-		PointF v = new PointF(velocityX, velocityY);
-		PointF a = new PointF(settings.stopAccel * normalVelocityX, settings.stopAccel * normalVelocityY);
-		
-		translation = new AccelTranslation(v, a);
-		state = ReaderState.ACCEL_TRANSLATION;
+		if(state != ReaderState.ACCEL_SCALING && state != ReaderState.SCALING) {
+			float velocityValue = (float) Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+			float normalVelocityX = velocityX / velocityValue;
+			float normalVelocityY = velocityY / velocityValue;
+			
+			PointF v = new PointF(velocityX, velocityY);
+			PointF a = new PointF(settings.stopAccel * normalVelocityX, settings.stopAccel * normalVelocityY);
+			
+			translation = new AccelTranslation(v, a);
+			state = ReaderState.ACCEL_TRANSLATION;
+		}
 	}
 	
 	private boolean activePointerChanged(MotionEvent event) {
@@ -151,5 +215,23 @@ public class ReaderSurface extends GestureSurface {
 		mActivePointerId = newActivePointerId;
 		
 		return activePointerIdChanged;
+	}
+	
+	public PointF getScreenSize(Context context) {
+		Activity activity = (Activity) context;
+		DisplayMetrics dm = new DisplayMetrics();
+		activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+		
+		Rect rect = new Rect(); 
+		Window win = activity.getWindow();
+		win.getDecorView().getWindowVisibleDisplayFrame(rect); 
+		int statusBarHeight = rect.top; 
+		int contentViewTop = win.findViewById(Window.ID_ANDROID_CONTENT).getTop();
+		int titleBarHeight = contentViewTop - statusBarHeight; 
+
+		screenHeight = ((float)dm.heightPixels - (titleBarHeight + statusBarHeight));
+		screenWidth = (float)dm.widthPixels;
+		
+		return new PointF(screenWidth, screenHeight);
 	}
 }
