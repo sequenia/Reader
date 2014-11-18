@@ -11,12 +11,19 @@ public class ReaderSettings {
 	private int textColor = Color.BLACK;
 	private float textSize = 30.0f;
 	
+	Paint pageBorderPaint;
+	private int pageBorderColor = Color.GRAY;
+	public float pageBorderSize = 1.0f;
+	
 	float stopAccel = -3000.0f;
 	float scaleAccel = 0.01f;
 	float accelScaleSensivity = 1.5f;
 	
 	float maxScaleVelocity = 30.0f;
 	float minScaleVelocity = 1.0f / maxScaleVelocity;
+	
+	float screenWidth = 0.0f;
+	float screenHeight = 0.0f;
 	
 	//float[] zoomByLevels = {1.0f, 0.75f, 0.5f, 0.25f, 0.1f, 0.075f, 0.05f, 0.025f, 0.01f, 0.0075f};
 
@@ -34,5 +41,11 @@ public class ReaderSettings {
 		textPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 		textPaint.setTextSize(textSize);
 		textPaint.setAntiAlias(true);
+		
+		pageBorderPaint = new Paint();
+		pageBorderPaint.setColor(pageBorderColor);
+		pageBorderPaint.setStrokeWidth(pageBorderSize);
+		pageBorderPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+		pageBorderPaint.setAntiAlias(true);
 	}
 }

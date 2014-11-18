@@ -27,9 +27,6 @@ public class ReaderSurface extends GestureSurface {
 	float scaleFactor = 1.0f;
 	float scaleVelocity = 1.0f;
 	private int mActivePointerId = 0;
-	
-	float screenHeight;
-	float screenWidth;
 
 	ReaderSettings settings;
 
@@ -38,15 +35,16 @@ public class ReaderSurface extends GestureSurface {
 		
 		settings = new ReaderSettings();
 		state = ReaderState.NOTHING;
-		reader = new Reader(settings);
 		translation = null;
 	}
 	
 	@Override
 	public void surfaceCreated(SurfaceHolder arg0) {
 		PointF screenSize = getScreenSize(getSurfaceContext());
-		screenWidth = screenSize.x;
-		screenHeight = screenSize.y;
+		settings.screenWidth = screenSize.x;
+		settings.screenHeight = screenSize.y;
+		
+		reader = new Reader(settings);
 
 		super.surfaceCreated(arg0);
 	}
@@ -62,6 +60,7 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void update(long delta) {
+		settings.pageBorderPaint.setStrokeWidth(settings.pageBorderSize / scaleFactor);
 		float time = (float) delta / 1000.0f;
 		
 		switch (state) {
@@ -86,8 +85,8 @@ public class ReaderSurface extends GestureSurface {
 				state = ReaderState.NOTHING;
 				translation = null;
 			} else {
-				float focusX = screenWidth / 2.0f;
-				float focusY = screenHeight / 2.0f;
+				float focusX = settings.screenWidth / 2.0f;
+				float focusY = settings.screenHeight / 2.0f;
 				scaleCanvas(scale, new PointF(focusX, focusY));
 			}
 			break;
@@ -229,8 +228,8 @@ public class ReaderSurface extends GestureSurface {
 		int contentViewTop = win.findViewById(Window.ID_ANDROID_CONTENT).getTop();
 		int titleBarHeight = contentViewTop - statusBarHeight; 
 
-		screenHeight = ((float)dm.heightPixels - (titleBarHeight + statusBarHeight));
-		screenWidth = (float)dm.widthPixels;
+		float screenHeight = ((float)dm.heightPixels - (titleBarHeight + statusBarHeight));
+		float screenWidth = (float)dm.widthPixels;
 		
 		return new PointF(screenWidth, screenHeight);
 	}
