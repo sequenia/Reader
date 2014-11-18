@@ -8,8 +8,9 @@ import android.view.ScaleGestureDetector;
 
 public class ReaderSurface extends GestureSurface {
 	public static enum ReaderState {
-		NOTHING, TRANSLATION, SCALING
+		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION
 	}
+	Translation translation;
 
 	private ReaderState state;
 	private Reader reader;
@@ -18,16 +19,18 @@ public class ReaderSurface extends GestureSurface {
 	float currentY = 0.0f;
 	float prevX = 0.0f;
 	float prevY = 0.0f;
-	
 	float scaleFactor = 1.0f;
-	
-	private int mActivePointerId = 0;
+	private int mActivePointerId = 0;	
+
+	ReaderSettings settings;
 
 	public ReaderSurface(Context _context) {
 		super(_context);
 		
+		settings = new ReaderSettings();
 		state = ReaderState.NOTHING;
-		reader = new Reader();
+		reader = new Reader(settings);
+		translation = null;
 	}
 	
 	@Override
@@ -41,7 +44,19 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void update(long delta) {
+		float time = (float) delta / 1000.0f;
 		
+		switch (state) {
+		case ACCEL_TRANSLATION:
+			PointF distance = ((AccelTranslation) translation).move(time);
+			
+			currentX += distance.x;
+			currentY += distance.y;
+			break;
+
+		default:
+			break;
+		}
 	}
 	
 	private void moveCanvas(float dx, float dy) {
@@ -71,7 +86,7 @@ public class ReaderSurface extends GestureSurface {
 		
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_MOVE:
-			if(state != ReaderState.SCALING && !activePointerIdChanged) {
+			if(state != ReaderState.SCALING && state != ReaderState.ACCEL_TRANSLATION && !activePointerIdChanged) {
 				state = ReaderState.TRANSLATION;
 
 				float dx = x - prevX;
@@ -83,7 +98,9 @@ public class ReaderSurface extends GestureSurface {
 			break;
 			
 		case MotionEvent.ACTION_UP:
-			state = ReaderState.NOTHING;			
+			if(state != ReaderState.ACCEL_TRANSLATION) {
+				state = ReaderState.NOTHING;
+			}
 			break;
 
 		default:
@@ -109,6 +126,20 @@ public class ReaderSurface extends GestureSurface {
 	@Override
 	public void onSurfaceScaleEnd(ScaleGestureDetector detector) {
 		state = ReaderState.NOTHING;
+	}
+	
+	@Override
+	public void onSurfaceFling(MotionEvent e1, MotionEvent e2, float velocityX,
+			float velocityY) {
+		float velocityValue = (float) Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+		float normalVelocityX = velocityX / velocityValue;
+		float normalVelocityY = velocityY / velocityValue;
+		
+		PointF v = new PointF(velocityX, velocityY);
+		PointF a = new PointF(settings.stopAccel * normalVelocityX, settings.stopAccel * normalVelocityY);
+		
+		translation = new AccelTranslation(v, a);
+		state = ReaderState.ACCEL_TRANSLATION;
 	}
 	
 	private boolean activePointerChanged(MotionEvent event) {

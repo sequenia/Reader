@@ -34,7 +34,7 @@ public class GestureSurface extends Surface {
 	}
 	
 	public void onSurfaceTouch(MotionEvent event) {
-		//System.out.println("Touch");
+		System.out.println("Touch");
 	}
 	
 	@Override
