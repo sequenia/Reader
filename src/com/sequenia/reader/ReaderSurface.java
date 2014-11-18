@@ -169,12 +169,12 @@ public class ReaderSurface extends GestureSurface {
 	
 	@Override
 	public void onSurfaceScaleEnd(ScaleGestureDetector detector) {
-		if(scaleVelocity < 0.05f) {
-			scaleVelocity = 0.05f;
+		if(scaleVelocity < settings.minScaleVelocity) {
+			scaleVelocity = settings.minScaleVelocity;
 		}
 		
-		if(scaleVelocity > 20.0f) {
-			scaleVelocity = 20.0f;
+		if(scaleVelocity > settings.maxScaleVelocity) {
+			scaleVelocity = settings.maxScaleVelocity;
 		}
 		
 		if(scaleVelocity < 1.0 / settings.accelScaleSensivity || scaleVelocity > 1.0 * settings.accelScaleSensivity) {
