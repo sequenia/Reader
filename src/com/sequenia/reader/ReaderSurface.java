@@ -56,7 +56,7 @@ public class ReaderSurface extends GestureSurface {
 		canvas.translate(currentX, currentY);
 		canvas.scale(scaleFactor, scaleFactor);
 
-		reader.draw(canvas, delta);
+		reader.draw(canvas, delta, scaleFactor);
 	}
 	
 	private void update(long delta) {

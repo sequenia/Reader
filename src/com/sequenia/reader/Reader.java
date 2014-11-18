@@ -37,11 +37,11 @@ public class Reader {
 		}
 	}
 	
-	public void draw(Canvas canvas, long delta) {
+	public void draw(Canvas canvas, long delta, float zoom) {
 		canvas.drawPaint(settings.bgPaint);
 		
 		for(int i = 0; i < pages.size(); i++) {
-			pages.get(i).draw(canvas);
+			pages.get(i).draw(canvas, zoom);
 		}
 	}
 }

@@ -4,61 +4,76 @@ import java.util.ArrayList;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.PointF;
 
 public class ReaderObject {
-	private PointF position;
-	private PointF absolutePosition;
-	private ArrayList<ReaderObject> children;
-	private ReaderObject parent;
+	private float x;
+	private float y;
+	private float absX;
+	private float absY;
+	private ReaderGroup parent;
 	
 	public ReaderObject() {
-		position = new PointF(0.0f, 0.0f);
-		absolutePosition = new PointF(0.0f, 0.0f);
-		children = new ArrayList<ReaderObject>();
+		x = 0.0f;
+		y = 0.0f;
+		absX = 0.0f;
+		absY = 0.0f;
 		parent = null;
 	}
 	
-	public void draw(Canvas canvas) {
-		for(int i = 0; i < children.size(); i++) {
-			children.get(i).draw(canvas);
-		}
+	public boolean draw(Canvas canvas, float zoom) {
+		return true;
 	}
 	
-	public void setPosition(PointF _position) {
-		position.x = _position.x;
-		position.y = _position.y;
+	public void setPosition(float _x, float _y) {
+		x = _x;
+		y = _y;
 		
 		setAbsolutePosition();
-	}
-	
-	public void setPosition(float x, float y) {
-		position.x = x;
-		position.y = y;
-		
-		setAbsolutePosition();
-	}
-	
-	public PointF getPosition() {
-		return new PointF(position.x, position.y);
 	}
 	
 	public float getPositionX() {
-		return position.x;
+		return x;
 	}
 	
 	public float getPositionY() {
-		return position.y;
+		return y;
 	}
 	
-	public void setParent(ReaderObject _parent) {
+	public void setAbsolutePosition() {
+		if(parent != null) {
+			absX = parent.getAbsoluteX() + getPositionX();
+			absY = parent.getAbsoluteY() + getPositionY();
+		} else {
+			absX = getPositionX();
+			absY = getPositionY();
+		}
+	}
+	
+	public float getAbsoluteX() {
+		return absX;
+	}
+	
+	public float getAbsoluteY() {
+		return absY;
+	}
+	
+	public void setParent(ReaderGroup _parent) {
 		parent = _parent;
 		
 		setAbsolutePosition();
 	}
 	
-	public ReaderObject getParent() {
+	public ReaderGroup getParent() {
 		return parent;
+	}
+}
+
+class ReaderGroup extends ReaderObject {
+	private ArrayList<ReaderObject> children;
+	
+	public ReaderGroup() {
+		super();
+		children = new ArrayList<ReaderObject>();
 	}
 	
 	public void addChild(ReaderObject _child) {
@@ -66,34 +81,26 @@ public class ReaderObject {
 		children.add(_child);
 	}
 	
-	public ReaderObject getChild(int _index) {
-		return children.get(_index);
+	public ReaderObject getChild(int index) {
+		return children.get(index);
 	}
 	
-	public void setAbsolutePosition() {
-		if(parent != null) {
-			absolutePosition.x = parent.getAbsoluteX() + position.x;
-			absolutePosition.y = parent.getAbsoluteY() + position.y;
-		} else {
-			absolutePosition.x = position.x;
-			absolutePosition.y = position.y;
+	@Override
+	public boolean draw(Canvas canvas, float zoom) {
+		boolean result = super.draw(canvas, zoom);
+		for(int i = 0; i < children.size(); i++) {
+			children.get(i).draw(canvas, zoom);
 		}
+		return result;
+	}
+	
+	@Override
+	public void setAbsolutePosition() {
+		super.setAbsolutePosition();
 		
 		for(int i = 0; i < children.size(); i++) {
 			children.get(i).setAbsolutePosition();
 		}
-	}
-	
-	public PointF getAbsolutePosition() {
-		return new PointF(absolutePosition.x, absolutePosition.y);
-	}
-	
-	public float getAbsoluteX() {
-		return absolutePosition.x;
-	}
-	
-	public float getAbsoluteY() {
-		return absolutePosition.y;
 	}
 }
 
@@ -130,34 +137,43 @@ class ReaderText extends ReaderObject {
 	}
 	
 	@Override
-	public void draw(Canvas canvas) {
+	public boolean draw(Canvas canvas, float zoom) {
 		canvas.drawText(text, getAbsoluteX(), getAbsoluteY(), paint);
+		return true;
 	}
 }
 
 class ReaderLine extends ReaderObject {
 	private Paint paint;
-	private PointF end;
+	private float endX;
+	private float endY;
 	
 	public ReaderLine() {
 		super();
 		paint = new Paint();
-		end = new PointF();
+		endX = 0.0f;
+		endY = 0.0f;
 	}
 	
-	public ReaderLine(PointF _start, PointF _end) {
+	public ReaderLine(float _startX, float _startY, float _endX, float _endY) {
 		super();
 		paint = new Paint();
-		setPosition(_start.x, _start.y);
-		end = new PointF(_end.x, _end.y);
+		setPosition(_startX, _startY);
+		endX = _endX;
+		endY = _endY;
 	}
 	
-	public void setEnd(PointF _end) {
-		end = new PointF(_end.x, _end.y);
+	public void setEnd(float _endX, float _endY) {
+		endX = _endX;
+		endY = _endY;
 	}
 	
-	public PointF getEnd() {
-		return new PointF(end.x, end.y);
+	public float getEndX() {
+		return endX;
+	}
+	
+	public float getEndY() {
+		return endY;
 	}
 	
 	public void setPaint(Paint _paint) {
@@ -169,14 +185,15 @@ class ReaderLine extends ReaderObject {
 	}
 	
 	@Override
-	public void draw(Canvas canvas) {
+	public boolean draw(Canvas canvas, float zoom) {
 		float absX = getAbsoluteX();
 		float absY = getAbsoluteY();
-		canvas.drawLine(absX, absY, absX - getPositionX() + end.x, absY - getPositionY() + end.y, paint);
+		canvas.drawLine(absX, absY, absX - getPositionX() + endX, absY - getPositionY() + endY, paint);
+		return true;
 	}
 }
 
-class ReaderPage extends ReaderObject {
+class ReaderPage extends ReaderGroup {
 	private float width = 0.0f;
 	private float height = 0.0f;
 	
@@ -188,10 +205,10 @@ class ReaderPage extends ReaderObject {
 	}
 	
 	private void createBorders(Paint borderPaint) {
-		ReaderLine borderTop = new ReaderLine(new PointF(0.0f, 0.0f), new PointF(width, 0.0f));
-		ReaderLine borderRight = new ReaderLine(new PointF(width, 0.0f), new PointF(width, height));
-		ReaderLine borderBottom = new ReaderLine(new PointF(width, height), new PointF(0.0f, height));
-		ReaderLine borderLeft = new ReaderLine(new PointF(0.0f, height), new PointF(0.0f, 0.0f));
+		ReaderLine borderTop = new ReaderLine(0.0f, 0.0f, width, 0.0f);
+		ReaderLine borderRight = new ReaderLine(width, 0.0f, width, height);
+		ReaderLine borderBottom = new ReaderLine(width, height, 0.0f, height);
+		ReaderLine borderLeft = new ReaderLine(0.0f, height, 0.0f, 0.0f);
 		
 		borderTop.setPaint(borderPaint);
 		borderRight.setPaint(borderPaint);
