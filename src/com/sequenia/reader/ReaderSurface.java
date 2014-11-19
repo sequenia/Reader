@@ -61,6 +61,9 @@ public class ReaderSurface extends GestureSurface {
 	
 	private void update(long delta) {
 		settings.pageBorderPaint.setStrokeWidth(settings.pageBorderSize / scaleFactor);
+		settings.currentPageBorderPaint.setStrokeWidth(settings.currentPageBorderSize / scaleFactor);
+		settings.bookBorderPaint.setStrokeWidth(settings.bookBorderSize / scaleFactor);
+		settings.bookPagesBorderPaint.setStrokeWidth(settings.bookPagesBorderSize / scaleFactor);
 		float time = (float) delta / 1000.0f;
 		
 		switch (state) {

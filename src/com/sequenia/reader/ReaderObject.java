@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 public class ReaderObject {
 	private float x;
@@ -20,8 +21,8 @@ public class ReaderObject {
 		parent = null;
 	}
 	
-	public void draw(Canvas canvas, int zoomLevel) {
-		
+	public boolean draw(Canvas canvas, float zoom) {
+		return true;
 	}
 	
 	public void setPosition(float _x, float _y) {
@@ -82,11 +83,11 @@ class ReaderGroup extends ReaderObject {
 	}
 	
 	@Override
-	public void draw(Canvas canvas, int zoomLevel) {
-		super.draw(canvas, zoomLevel);
+	public boolean draw(Canvas canvas, float zoom) {
 		for(int i = 0; i < children.size(); i++) {
-			children.get(i).draw(canvas, zoomLevel);
+			children.get(i).draw(canvas, zoom);
 		}
+		return super.draw(canvas, zoom);
 	}
 	
 	@Override
@@ -132,8 +133,9 @@ class ReaderText extends ReaderObject {
 	}
 	
 	@Override
-	public void draw(Canvas canvas, int zoomLevel) {
+	public boolean draw(Canvas canvas, float zoom) {
 		canvas.drawText(text, getAbsoluteX(), getAbsoluteY(), paint);
+		return true;
 	}
 }
 
@@ -179,40 +181,49 @@ class ReaderLine extends ReaderObject {
 	}
 	
 	@Override
-	public void draw(Canvas canvas, int zoomLevel) {
+	public boolean draw(Canvas canvas, float zoom) {
 		float absX = getAbsoluteX();
 		float absY = getAbsoluteY();
 		canvas.drawLine(absX, absY, absX - getPositionX() + endX, absY - getPositionY() + endY, paint);
+		return true;
+	}
+	
+	public boolean draw(Canvas canvas, float zoom, Paint _paint) {
+		float absX = getAbsoluteX();
+		float absY = getAbsoluteY();
+		canvas.drawLine(absX, absY, absX - getPositionX() + endX, absY - getPositionY() + endY, _paint);
+		return true;
 	}
 }
 
-class ReaderPage extends ReaderGroup {
+class ReaderGroupWithSize extends ReaderGroup {
 	private float width = 0.0f;
 	private float height = 0.0f;
 	private ReaderLine[] borders;
-	private ArrayList<ReaderText> lines;
 	
-	public ReaderPage(float _width, float _height, Paint borderPaint) {
-		super();
+	public ReaderGroupWithSize() {
+		borders = new ReaderLine[4];
+	}
+	
+	public ReaderGroupWithSize(float _width, float _height) {
 		width = _width;
 		height = _height;
 		borders = new ReaderLine[4];
-		lines = new ArrayList<ReaderText>();
-		createBorders(borderPaint);
 	}
 	
 	@Override
-	public void draw(Canvas canvas, int zoomLevel) {
-		for(int i = 0; i < borders.length; i++) {
-			borders[i].draw(canvas, zoomLevel);
-		}
-		
-		for(int i = 0; i < lines.size(); i++) {
-			lines.get(i).draw(canvas, zoomLevel);
-		}
+	public boolean draw(Canvas canvas, float zoom) {
+		return isInScreen(canvas);
 	}
 	
-	private void createBorders(Paint borderPaint) {
+	public boolean drawBorders(Canvas canvas, float zoom) {
+		for(int i = 0; i < borders.length; i++) {
+			borders[i].draw(canvas, zoom);
+		}
+		return true;
+	}
+	
+	public void createBorders(Paint borderPaint) {
 		ReaderLine borderTop = new ReaderLine(0.0f, 0.0f, width, 0.0f);
 		ReaderLine borderRight = new ReaderLine(width, 0.0f, width, height);
 		ReaderLine borderBottom = new ReaderLine(width, height, 0.0f, height);
@@ -234,9 +245,12 @@ class ReaderPage extends ReaderGroup {
 		borders[3] = borderLeft;
 	}
 	
-	public void addLine(ReaderText line) {
-		lines.add(line);
-		addChild(line);
+	private boolean isInScreen(Canvas canvas) {
+		Rect rect = canvas.getClipBounds();
+		return !(getAbsoluteX() > rect.right ||
+				getAbsoluteX() + width < rect.left ||
+				getAbsoluteY() > rect.bottom ||
+				getAbsoluteY() + height < rect.top);
 	}
 	
 	public void setWidth(float _width) {
@@ -253,5 +267,268 @@ class ReaderPage extends ReaderGroup {
 	
 	public float getHeight() {
 		return height;
+	}
+	
+	public ReaderLine[] getBorders() {
+		return borders;
+	}
+}
+
+class ReaderBook extends ReaderGroupWithSize {
+	private ArrayList<ReaderPage> pages;
+	
+	private ArrayList<ReaderText> title;
+	private ArrayList<ReaderText> creator;
+	private ArrayList<ReaderText> year;
+	
+	private ArrayList<ReaderText> fullTitle;
+	private ArrayList<ReaderText> fullCreator;
+	private ArrayList<ReaderText> fullYear;
+	
+	private Interval pagesInterval;
+	private Interval minInfoInterval;
+	private Interval fullInfoInterval;
+	
+	private Paint borderPaintWhenPagesShown;
+	
+	public ReaderBook(ReaderSettings settings) {
+		super(settings.screenWidth, settings.screenHeight);
+		pages = new ArrayList<ReaderPage>();
+		pagesInterval = new Interval(0.05f, 100.0f, false, true);
+		fullInfoInterval = new Interval(0.02f, 0.05f, false, true);
+		minInfoInterval = new Interval(0.0001f, 0.02f, false, true);
+		
+		title = new ArrayList<ReaderText>();
+		creator = new ArrayList<ReaderText>();
+		year = new ArrayList<ReaderText>();
+		
+		fullTitle = new ArrayList<ReaderText>();
+		fullCreator = new ArrayList<ReaderText>();
+		fullYear = new ArrayList<ReaderText>();
+		
+		borderPaintWhenPagesShown = settings.bookPagesBorderPaint;
+	}
+	
+	@Override
+	public boolean draw(Canvas canvas, float zoom) {
+		boolean inScreen = super.draw(canvas, zoom);
+		
+		if(inScreen) {
+			if(minInfoInterval.isIn(zoom)) {
+				System.out.println("min");
+				drawMinInfo(canvas, zoom);
+				drawBorders(canvas, zoom);
+			}
+
+			if(fullInfoInterval.isIn(zoom)) {
+				System.out.println("max");
+				drawFullInfo(canvas, zoom);
+				drawBorders(canvas, zoom);
+			}
+
+			if(pagesInterval.isIn(zoom)) {
+				drawPages(canvas, zoom);
+				drawBordersWhenPagesShown(canvas, zoom);
+			}
+		}
+
+		return inScreen;
+	}
+	
+	public boolean drawMinInfo(Canvas canvas, float zoom) {
+		drawTextArray(title, canvas, zoom);
+		drawTextArray(creator, canvas, zoom);
+		drawTextArray(year, canvas, zoom);
+		return true;
+	}
+	
+	public boolean drawFullInfo(Canvas canvas, float zoom) {
+		drawTextArray(fullTitle, canvas, zoom);
+		drawTextArray(fullCreator, canvas, zoom);
+		drawTextArray(fullYear, canvas, zoom);
+		return true;
+	}
+	
+	public boolean drawPages(Canvas canvas, float zoom) {
+		for(int i = 0; i < pages.size(); i++) {
+			pages.get(i).draw(canvas, zoom);
+		}
+		return true;
+	}
+	
+	public boolean drawBordersWhenPagesShown(Canvas canvas, float zoom) {
+		ReaderLine[] borders = getBorders();
+		for(int i = 0; i < borders.length; i++) {
+			borders[i].draw(canvas, zoom, borderPaintWhenPagesShown);
+		}
+		return true;
+	}
+	
+	private boolean drawTextArray(ArrayList<ReaderText> array, Canvas canvas, float zoom) {
+		for(int i = 0; i < array.size(); i++) {
+			array.get(i).draw(canvas, zoom);
+		}
+		return true;
+	}
+	
+	public void setTitle(ArrayList<String> _title, ReaderSettings settings) {
+		title = new ArrayList<ReaderText>();
+		fullTitle = new ArrayList<ReaderText>();
+
+		int length = _title.size();
+		if(length > 0) {
+			title.add(createText(_title.get(0), 20.0f, 500.0f, settings.minInfoPaint));
+		}
+		
+		for(int i = 0; i < length; i++) {
+			fullTitle.add(createText(_title.get(i), 20.0f, 500.0f + i * 500.0f, settings.fullInfoPaint));
+		}
+	}
+	
+	public void setCreator(ArrayList<String> _creator, ReaderSettings settings) {
+		creator = new ArrayList<ReaderText>();
+		fullCreator = new ArrayList<ReaderText>();
+
+		int length = _creator.size();
+		if(length > 0) {
+			creator.add(createText(_creator.get(0), 20.0f, 2500.0f, settings.minInfoPaint));
+		}
+		
+		for(int i = 0; i < length; i++) {
+			fullCreator.add(createText(_creator.get(i), 20.0f, 2500.0f + i * 500.0f, settings.fullInfoPaint));
+		}
+	}
+	
+	public void setYear(ArrayList<String> _year, ReaderSettings settings) {
+		year = new ArrayList<ReaderText>();
+		fullYear = new ArrayList<ReaderText>();
+
+		int length = _year.size();
+		if(length > 0) {
+			year.add(createText(_year.get(0), 20.0f, 4500.0f, settings.minInfoPaint));
+		}
+		
+		for(int i = 0; i < length; i++) {
+			fullYear.add(createText(_year.get(i), 20.0f, 4500.0f + i * 500.0f, settings.fullInfoPaint));
+		}
+	}
+	
+	private ReaderText createText(String text, float x, float y, Paint paint) {
+		ReaderText t = new ReaderText(text);
+		t.setPosition(x, y);
+		t.setPaint(paint);
+		addChild(t);
+		return t;
+	}
+	
+	public ArrayList<ReaderPage> getPages() {
+		return pages;
+	}
+	
+	public void addPage(ReaderPage page) {
+		pages.add(page);
+		addChild(page);
+	}
+}
+
+class ReaderPage extends ReaderGroupWithSize {
+	private ArrayList<ReaderText> lines;
+	
+	private Paint bgPaint;
+	private Paint readBgPaint;
+	private Paint currentBgPaint;
+	private Paint currentBorderPaint;
+	
+	private Interval bgInterval;
+	private Interval textInterval;
+	
+	private boolean isRead = false;
+	private boolean isCurrent = false;
+	
+	public ReaderPage(float _width, float _height, ReaderSettings settings) {
+		super(_width, _height);
+		lines = new ArrayList<ReaderText>();
+		bgInterval = new Interval(0.05f, 0.25f, false, true);
+		textInterval = new Interval(0.1f, 100.0f, false, true);
+		createBorders(settings.pageBorderPaint);
+		bgPaint = settings.pageBgPaint;
+		currentBgPaint = settings.currentPageBgPaint;
+		readBgPaint = settings.readPageBgPaint;
+		currentBorderPaint = settings.currentPageBorderPaint;
+	}
+	
+	@Override
+	public boolean draw(Canvas canvas, float zoom) {
+		boolean inScreen = super.draw(canvas, zoom);
+		
+		if(inScreen) {
+			if(bgInterval.isIn(zoom)) {
+				drawBackground(canvas, zoom);
+				drawBorders(canvas, zoom);
+			} else {
+				drawBorders(canvas, zoom, true);
+			}
+
+			if(textInterval.isIn(zoom)) {
+				drawText(canvas, zoom);
+			}
+		}
+
+		return inScreen;
+	}
+	
+	public boolean drawBorders(Canvas canvas, float zoom, boolean reactToCurrent) {
+		if(reactToCurrent && isCurrent) {
+			ReaderLine[] borders = getBorders();
+			for(int i = 0; i < borders.length; i++) {
+				borders[i].draw(canvas, zoom, currentBorderPaint);
+			}
+		} else {
+			drawBorders(canvas, zoom);
+		}
+		return true;
+	}
+	
+	public boolean drawText(Canvas canvas, float zoom) {
+		for(int i = 0; i < lines.size(); i++) {
+			lines.get(i).draw(canvas, zoom);
+		}
+		return true;
+	}
+	
+	private boolean drawBackground(Canvas canvas, float zoom) {
+		Paint paint;
+		if(isCurrent) {
+			paint = currentBgPaint;
+		} else {
+			if(isRead) {
+				paint = readBgPaint;
+			} else {
+				paint = bgPaint;
+			}
+		}
+		canvas.drawRect(getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getWidth(), getAbsoluteY() + getHeight(), paint);
+		return true;
+	}
+	
+	public void addLine(ReaderText line) {
+		lines.add(line);
+		addChild(line);
+	}
+	
+	public void setIsRead(boolean _isRead) {
+		isRead = _isRead;
+	}
+	
+	public boolean getIsRead() {
+		return isRead;
+	}
+	
+	public void setIsCurrent(boolean _isCurrent) {
+		isCurrent = _isCurrent;
+	}
+	
+	public boolean getIsCurrent() {
+		return isCurrent;
 	}
 }
