@@ -20,8 +20,8 @@ public class ReaderObject {
 		parent = null;
 	}
 	
-	public boolean draw(Canvas canvas, float zoom) {
-		return true;
+	public void draw(Canvas canvas, int zoomLevel) {
+		
 	}
 	
 	public void setPosition(float _x, float _y) {
@@ -81,17 +81,12 @@ class ReaderGroup extends ReaderObject {
 		children.add(_child);
 	}
 	
-	public ReaderObject getChild(int index) {
-		return children.get(index);
-	}
-	
 	@Override
-	public boolean draw(Canvas canvas, float zoom) {
-		boolean result = super.draw(canvas, zoom);
+	public void draw(Canvas canvas, int zoomLevel) {
+		super.draw(canvas, zoomLevel);
 		for(int i = 0; i < children.size(); i++) {
-			children.get(i).draw(canvas, zoom);
+			children.get(i).draw(canvas, zoomLevel);
 		}
-		return result;
 	}
 	
 	@Override
@@ -137,9 +132,8 @@ class ReaderText extends ReaderObject {
 	}
 	
 	@Override
-	public boolean draw(Canvas canvas, float zoom) {
+	public void draw(Canvas canvas, int zoomLevel) {
 		canvas.drawText(text, getAbsoluteX(), getAbsoluteY(), paint);
-		return true;
 	}
 }
 
@@ -185,23 +179,37 @@ class ReaderLine extends ReaderObject {
 	}
 	
 	@Override
-	public boolean draw(Canvas canvas, float zoom) {
+	public void draw(Canvas canvas, int zoomLevel) {
 		float absX = getAbsoluteX();
 		float absY = getAbsoluteY();
 		canvas.drawLine(absX, absY, absX - getPositionX() + endX, absY - getPositionY() + endY, paint);
-		return true;
 	}
 }
 
 class ReaderPage extends ReaderGroup {
 	private float width = 0.0f;
 	private float height = 0.0f;
+	private ReaderLine[] borders;
+	private ArrayList<ReaderText> lines;
 	
 	public ReaderPage(float _width, float _height, Paint borderPaint) {
 		super();
 		width = _width;
 		height = _height;
+		borders = new ReaderLine[4];
+		lines = new ArrayList<ReaderText>();
 		createBorders(borderPaint);
+	}
+	
+	@Override
+	public void draw(Canvas canvas, int zoomLevel) {
+		for(int i = 0; i < borders.length; i++) {
+			borders[i].draw(canvas, zoomLevel);
+		}
+		
+		for(int i = 0; i < lines.size(); i++) {
+			lines.get(i).draw(canvas, zoomLevel);
+		}
 	}
 	
 	private void createBorders(Paint borderPaint) {
@@ -219,6 +227,16 @@ class ReaderPage extends ReaderGroup {
 		addChild(borderRight);
 		addChild(borderBottom);
 		addChild(borderLeft);
+		
+		borders[0] = borderTop;
+		borders[1] = borderRight;
+		borders[2] = borderBottom;
+		borders[3] = borderLeft;
+	}
+	
+	public void addLine(ReaderText line) {
+		lines.add(line);
+		addChild(line);
 	}
 	
 	public void setWidth(float _width) {

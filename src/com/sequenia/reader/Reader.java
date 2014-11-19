@@ -30,7 +30,7 @@ public class Reader {
 				ReaderText text = new ReaderText("Привет! Как дела!?");
 				text.setPosition(10.0f, j * 50.0f + 50.0f);
 				text.setPaint(settings.textPaint);
-				page.addChild(text);
+				page.addLine(text);
 			}
 			
 			pages.add(page);
@@ -41,7 +41,7 @@ public class Reader {
 		canvas.drawPaint(settings.bgPaint);
 		
 		for(int i = 0; i < pages.size(); i++) {
-			pages.get(i).draw(canvas, zoom);
+			pages.get(i).draw(canvas, 0);
 		}
 	}
 }
