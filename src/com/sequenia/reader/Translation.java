@@ -4,7 +4,7 @@ import android.graphics.PointF;
 
 public class Translation {
 	public enum TranslationType {
-		ACCEL_TRANSLATION, ACCEL_SCALING
+		ACCEL_TRANSLATION, ACCEL_SCALING, UNIFORM_TRANSLATION, UNIFORM_SCALING, UNIFORM_MOTION
 	}
 	
 	TranslationType type;
@@ -15,6 +15,91 @@ public class Translation {
 	
 	public Translation(TranslationType _type) {
 		type = _type;
+	}
+}
+
+class UniformTranslation extends Translation {
+	public PointF v;
+	public PointF d;
+	
+	public UniformTranslation() {
+		super(TranslationType.UNIFORM_TRANSLATION);
+		v = new PointF(0.0f, 0.0f);
+		d = new PointF(0.0f, 0.0f);
+	}
+	
+	public UniformTranslation(PointF _v) {
+		super(TranslationType.UNIFORM_TRANSLATION);
+		v = new PointF(_v.x, _v.y);
+		d = new PointF(0.0f, 0.0f);
+	}
+	
+	public PointF move(float t) {
+		float dx = v.x * t;
+		float dy = v.y * t;
+		
+		d.x += dx;
+		d.y += dy;
+		
+		return new PointF(dx, dy);
+	}
+}
+
+class UniformScaling extends Translation {
+	public float v;
+	public float s;
+	
+	public UniformScaling() {
+		super(TranslationType.UNIFORM_SCALING);
+		v = 0.0f;
+		s = 0.0f;
+	}
+	
+	public UniformScaling(float _v) {
+		super(TranslationType.UNIFORM_SCALING);
+		v = _v;
+		s = 1.0f;
+	}
+	
+	public float move(float t) {
+		float ds = (float) Math.pow(v, t);
+		
+		s *= ds;
+		
+		return ds;
+	}
+}
+
+class UniformMotion extends Translation {
+	UniformTranslation translation;
+	UniformScaling scaling;
+	
+	public UniformMotion() {
+		super(TranslationType.UNIFORM_MOTION);
+		translation = new UniformTranslation();
+		scaling = new UniformScaling();
+	}
+	
+	public UniformMotion(PointF translation_v, float scaling_v) {
+		super(TranslationType.UNIFORM_MOTION);
+		translation = new UniformTranslation(translation_v);
+		scaling = new UniformScaling(scaling_v);
+	}
+	
+	public UniformMotionResult move(float t) {
+		UniformMotionResult result = new UniformMotionResult();
+		result.translation = translation.move(t);
+		result.scaling = scaling.move(t);
+		return result;
+	}
+	
+	public class UniformMotionResult {
+		public PointF translation;
+		public float scaling;
+
+		public UniformMotionResult() {
+			
+		}
 	}
 }
 
