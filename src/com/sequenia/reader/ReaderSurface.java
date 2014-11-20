@@ -111,6 +111,7 @@ public class ReaderSurface extends GestureSurface {
 				currentY = uniformMotion.pointToMove.y;
 				scaleFactor = uniformMotion.pointToMove.s;
 				stopTranslation();
+				mode = ReaderMode.READING;
 			} else {
 				moveCanvas(result.x, result.y);
 				scaleCanvas(result.s, new PointF(settings.halfScreenWidth, settings.halfScreenHeight));
@@ -159,8 +160,22 @@ public class ReaderSurface extends GestureSurface {
 			if((state == ReaderState.NOTHING || state == ReaderState.TRANSLATION) && !activePointerIdChanged) {
 				state = ReaderState.TRANSLATION;
 
-				float dx = x - prevX;
-				float dy = y - prevY;
+				float dx = 0.0f;
+				float dy = 0.0f;
+				
+				switch (mode) {
+				case OVERVIEW:
+					dx = x - prevX;
+					dy = y - prevY;
+					break;
+
+				case READING:
+					dx = x - prevX;
+					break;
+					
+				default:
+					break;
+				}
 				
 				moveCanvas(dx, dy);
 			}
@@ -175,10 +190,21 @@ public class ReaderSurface extends GestureSurface {
 
 		case MotionEvent.ACTION_UP:
 			if(state == ReaderState.TRANSLATION) {
-				if(scaleFactor >= settings.toReadModeSensivity) {
-					moveToPage();
-				} else {
+				switch (mode) {
+				case OVERVIEW:
+					if(scaleFactor >= settings.toReadModeSensivity) {
+						moveToPage();
+					} else {
+						state = ReaderState.NOTHING;
+					}
+					break;
+
+				case READING:
 					state = ReaderState.NOTHING;
+					break;
+					
+				default:
+					break;
 				}
 			}
 			break;
@@ -191,17 +217,22 @@ public class ReaderSurface extends GestureSurface {
 		prevY = y;
 	}
 	
+	public void overviewMove() {
+		
+	}
+	
 	@Override
 	public void onSurfaceScaleBegin(ScaleGestureDetector detector) {
 		state = ReaderState.SCALING;
+		mode = ReaderMode.OVERVIEW;
 	}
 	
 	@Override
 	public void onSurfaceScale(ScaleGestureDetector detector) {
+		mode = ReaderMode.OVERVIEW;
 		float dScale = detector.getScaleFactor();
 		PointF focus = new PointF(detector.getFocusX(), detector.getFocusY());
 		scaleVelocity = (float) Math.pow(dScale, 1.0f / ((float)detector.getTimeDelta() / 1000.0f));
-		
 		scaleCanvas(dScale, focus);
 	}
 	
@@ -235,6 +266,21 @@ public class ReaderSurface extends GestureSurface {
 	@Override
 	public void onSurfaceFling(MotionEvent e1, MotionEvent e2, float velocityX,
 			float velocityY) {
+		switch (mode) {
+		case OVERVIEW:
+			overviewFling(e1, e2, velocityX, velocityY);
+			break;
+
+		case READING:
+			readingFling(e1, e2, velocityX, velocityY);
+			break;
+			
+		default:
+			break;
+		}
+	}
+	
+	private void overviewFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 		if(state != ReaderState.ACCEL_SCALING && state != ReaderState.SCALING) {
 			float velocityValue = (float) Math.sqrt(velocityX * velocityX + velocityY * velocityY);
 			float normalVelocityX = velocityX / velocityValue;
@@ -246,6 +292,10 @@ public class ReaderSurface extends GestureSurface {
 			translation = new AccelTranslation(v, a);
 			state = ReaderState.ACCEL_TRANSLATION;
 		}
+	}
+	
+	private void readingFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+		
 	}
 	
 	private boolean activePointerChanged(MotionEvent event) {
