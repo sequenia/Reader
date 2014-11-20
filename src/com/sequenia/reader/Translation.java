@@ -8,6 +8,7 @@ public class Translation {
 	}
 	
 	TranslationType type;
+	boolean stoped = false;
 	
 	public Translation() {
 		
@@ -71,34 +72,108 @@ class UniformScaling extends Translation {
 }
 
 class UniformMotion extends Translation {
-	UniformTranslation translation;
-	UniformScaling scaling;
+	public float vx;
+	public float vy;
+	public float vs;
+	
+	public float sx;
+	public float sy;
+	public float ss;
+	
+	UniformMotionResult needs;
+	UniformMotionResult pointToMove;
 	
 	public UniformMotion() {
 		super(TranslationType.UNIFORM_MOTION);
-		translation = new UniformTranslation();
-		scaling = new UniformScaling();
+
+		vx = 0.0f;
+		vy = 0.0f;
+		vs = 0.0f;
+		
+		sx = 0.0f;
+		sy = 0.0f;
+		ss = 1.0f;
+
+		needs = null;
+		pointToMove = null;
 	}
 	
-	public UniformMotion(PointF translation_v, float scaling_v) {
+	public UniformMotion(float _vx, float _vy, float _vs) {
 		super(TranslationType.UNIFORM_MOTION);
-		translation = new UniformTranslation(translation_v);
-		scaling = new UniformScaling(scaling_v);
+
+		vx = _vx;
+		vy = _vy;
+		vs = _vs;
+		
+		sx = 0.0f;
+		sy = 0.0f;
+		ss = 1.0f;
+
+		needs = null;
+		pointToMove = null;
 	}
 	
 	public UniformMotionResult move(float t) {
-		UniformMotionResult result = new UniformMotionResult();
-		result.translation = translation.move(t);
-		result.scaling = scaling.move(t);
-		return result;
+		float ds = (float) Math.pow(vs, t);
+		ss *= ds;
+		
+		float dx = vx * t;
+		float dy = vy * t;
+		
+		sx += dx;
+		sy += dy;
+		
+		if(needs != null) {
+			boolean translationEnded = false;
+			boolean scalingEnded = false;
+			
+			if(needs.x < 0.0f && sx < needs.x) {
+				translationEnded = true;
+			}
+			
+			if(needs.x >= 0.0f && sx >= needs.x) {
+				translationEnded = true;
+			}
+			
+			if(needs.y < 0.0f && sy < needs.y) {
+				translationEnded = true;
+			}
+			
+			if(needs.y >= 0.0f && sy >= needs.y) {
+				translationEnded = true;
+			}
+			
+			if(needs.s < 1.0f && ss < needs.s) {
+				scalingEnded = true;
+			}
+			
+			if(needs.s >= 1.0f && ss >= needs.s) {
+				scalingEnded = true;
+			}
+			
+			if(translationEnded && scalingEnded) {
+				stoped = true;
+			}
+		}
+		
+		return new UniformMotionResult(dx, dy, ds);
 	}
 	
-	public class UniformMotionResult {
-		public PointF translation;
-		public float scaling;
+	public static class UniformMotionResult {
+		public float x;
+		public float y;
+		public float s;
 
 		public UniformMotionResult() {
-			
+			x = 0.0f;
+			y = 0.0f;
+			s = 1.0f;
+		}
+		
+		public UniformMotionResult(float _x, float _y, float _s) {
+			x = _x;
+			y = _y;
+			s = _s;
 		}
 	}
 }

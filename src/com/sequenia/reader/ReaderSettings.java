@@ -47,14 +47,14 @@ public class ReaderSettings {
 	float stopAccel = -3000.0f;
 	float scaleAccel = 0.01f;
 	float accelScaleSensivity = 1.5f;
+	float toReadModeSensivity = 0.6f;
+	float toReadTime = 0.2f;
 	
 	float maxScaleVelocity = 30.0f;
 	float minScaleVelocity = 1.0f / maxScaleVelocity;
 	
 	float screenWidth = 0.0f;
 	float screenHeight = 0.0f;
-	
-	float[] zoomByLevels = {1.0f, 0.75f, 0.5f, 0.25f, 0.1f, 0.075f, 0.05f, 0.025f, 0.01f, 0.0075f};
 
 	public ReaderSettings() {
 		initPaint();

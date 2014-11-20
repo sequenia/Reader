@@ -1,5 +1,7 @@
 package com.sequenia.reader;
 
+import com.sequenia.reader.UniformMotion.UniformMotionResult;
+
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -13,9 +15,13 @@ import android.view.Window;
 
 public class ReaderSurface extends GestureSurface {
 	public static enum ReaderState {
-		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING
+		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING, TO_READ_CORRECTION
+	}
+	public static enum ReaderMode {
+		OVERVIEW, READING
 	}
 	Translation translation;
+	ReaderMode mode;
 
 	private ReaderState state;
 	private Reader reader;
@@ -27,7 +33,7 @@ public class ReaderSurface extends GestureSurface {
 	float scaleFactor = 1.0f;
 	float scaleVelocity = 1.0f;
 	private int mActivePointerId = 0;
-
+	
 	ReaderSettings settings;
 
 	public ReaderSurface(Context _context) {
@@ -36,6 +42,7 @@ public class ReaderSurface extends GestureSurface {
 		settings = new ReaderSettings();
 		state = ReaderState.NOTHING;
 		translation = null;
+		mode = ReaderMode.READING;
 	}
 	
 	@Override
@@ -60,18 +67,16 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void update(long delta) {
-		settings.pageBorderPaint.setStrokeWidth(settings.pageBorderSize / scaleFactor);
-		settings.currentPageBorderPaint.setStrokeWidth(settings.currentPageBorderSize / scaleFactor);
-		settings.bookBorderPaint.setStrokeWidth(settings.bookBorderSize / scaleFactor);
-		settings.bookPagesBorderPaint.setStrokeWidth(settings.bookPagesBorderSize / scaleFactor);
 		float time = (float) delta / 1000.0f;
+
+		updatePaints();
 		
 		switch (state) {
 		case ACCEL_TRANSLATION:
 			AccelTranslation accelTranslation = (AccelTranslation) translation;
 			PointF distance = accelTranslation.move(time);
 			
-			if(accelTranslation.directionChanged) {
+			if(accelTranslation.directionChanged || accelTranslation.stoped) {
 				state = ReaderState.NOTHING;
 				translation = null;
 			} else {
@@ -84,19 +89,54 @@ public class ReaderSurface extends GestureSurface {
 			AccelScaling accelScaling = (AccelScaling) translation;
 			float scale = accelScaling.move(time);
 			
-			if(accelScaling.directionChanged) {
+			if(accelScaling.directionChanged || accelScaling.stoped) {
+				state = ReaderState.NOTHING;
+				translation = null;
+				if(scaleFactor >= settings.toReadModeSensivity) {
+					moveToPage();
+				}
+			} else {
+				if(scaleFactor >= settings.toReadModeSensivity &&
+				  (scaleFactor < 1.0f && scale > 1.0f || scaleFactor >= 1.0f && scale <= 1.0f)) {
+					moveToPage();
+				} else {
+					float focusX = settings.screenWidth / 2.0f;
+					float focusY = settings.screenHeight / 2.0f;
+					scaleCanvas(scale, new PointF(focusX, focusY));
+				}
+			}
+			break;
+			
+		case TO_READ_CORRECTION:
+			UniformMotion uniformMotion = (UniformMotion) translation;
+			UniformMotionResult result = uniformMotion.move(time);
+			
+			if(uniformMotion.stoped) {
+				currentX = uniformMotion.pointToMove.x;
+				currentY = uniformMotion.pointToMove.y;
+				scaleFactor = uniformMotion.pointToMove.s;
 				state = ReaderState.NOTHING;
 				translation = null;
 			} else {
+				currentX += result.x * uniformMotion.ss;
+				currentY += result.y * uniformMotion.ss;
+
 				float focusX = settings.screenWidth / 2.0f;
 				float focusY = settings.screenHeight / 2.0f;
-				scaleCanvas(scale, new PointF(focusX, focusY));
+				scaleCanvas(result.s, new PointF(focusX, focusY));
 			}
 			break;
 			
 		default:
 			break;
 		}
+	}
+	
+	private void updatePaints() {
+		settings.pageBorderPaint.setStrokeWidth(settings.pageBorderSize / scaleFactor);
+		settings.currentPageBorderPaint.setStrokeWidth(settings.currentPageBorderSize / scaleFactor);
+		settings.bookBorderPaint.setStrokeWidth(settings.bookBorderSize / scaleFactor);
+		settings.bookPagesBorderPaint.setStrokeWidth(settings.bookPagesBorderSize / scaleFactor);
 	}
 	
 	private void moveCanvas(float dx, float dy) {
@@ -138,12 +178,18 @@ public class ReaderSurface extends GestureSurface {
 			break;
 			
 		case MotionEvent.ACTION_DOWN:
-			state = ReaderState.NOTHING;
+			if(state != ReaderState.TO_READ_CORRECTION) {
+				state = ReaderState.NOTHING;
+			}
 			break;
 
 		case MotionEvent.ACTION_UP:
 			if(state == ReaderState.TRANSLATION) {
-				state = ReaderState.NOTHING;
+				if(scaleFactor >= settings.toReadModeSensivity) {
+					moveToPage();
+				} else {
+					state = ReaderState.NOTHING;
+				}
 			}
 			break;
 
@@ -188,7 +234,11 @@ public class ReaderSurface extends GestureSurface {
 			translation = new AccelScaling(scaleVelocity, accel);
 			state = ReaderState.ACCEL_SCALING;
 		} else {
-			state = ReaderState.NOTHING;
+			if(scaleFactor >= settings.toReadModeSensivity) {
+				moveToPage();
+			} else {
+				state = ReaderState.NOTHING;
+			}
 		}
 	}
 	
@@ -235,5 +285,62 @@ public class ReaderSurface extends GestureSurface {
 		float screenWidth = (float)dm.widthPixels;
 		
 		return new PointF(screenWidth, screenHeight);
+	}
+	
+	private void moveToPage() {
+		float pageX = 2.0f * settings.screenWidth;
+		float pageY = 2.0f * settings.screenHeight;
+		float pageWidth = settings.screenWidth;
+		float pageHeight = settings.screenHeight;
+
+		// Координаты канваса относительно экрана после движения
+		float canvasNeededX = - pageX;
+		float canvasNeededY = - pageY;
+		float canvasNeededScale = 1.0f;
+		
+		// Центр страницы на канвасе
+		float pageCenterX = pageX + pageWidth / 2.0f;
+		float pageCenterY = pageY + pageHeight / 2.0f;
+		
+		// Центр страницы относительно экрана
+		PointF sreenPageCenter = canvasToScreenCoord(new PointF(pageCenterX, pageCenterY), settings.screenWidth, settings.screenHeight);
+		
+		// Цент экрана относительно экрана
+		float screenCenterX = settings.screenWidth / 2.0f;
+		float screenCenterY = settings.screenHeight / 2.0f;
+		
+		// Расстояние, которое должен пройти канвас относительно экранаs
+		float distanceX = screenCenterX - sreenPageCenter.x;
+		float distanceY = screenCenterY - sreenPageCenter.y;
+		float distanceScale = canvasNeededScale / scaleFactor;
+		
+		float xV = distanceX / settings.toReadTime;
+		float yV = distanceY / settings.toReadTime;
+		float scaleV = (float) Math.pow(distanceScale, 1.0f / settings.toReadTime);
+		
+		translation = new UniformMotion(xV, yV, scaleV);
+		((UniformMotion) translation).needs = new UniformMotionResult(distanceX, distanceY, distanceScale);
+		((UniformMotion) translation).pointToMove = new UniformMotionResult(canvasNeededX, canvasNeededY, canvasNeededScale);
+		state = ReaderState.TO_READ_CORRECTION;
+	}
+	
+	private PointF screenToCanvasCoord(PointF screenCoord, float screenWidth, float screenHeight) {
+		float screenX = screenCoord.x;
+		float screenY = screenCoord.y;
+		
+		float canvasX = (screenX - currentX) / scaleFactor;
+		float canvasY = (screenY - currentY) / scaleFactor;
+		
+		return new PointF(canvasX, canvasY);
+	}
+	
+	private PointF canvasToScreenCoord(PointF canvasCoord, float screenWidth, float screenHeight) {
+		float canvasX = canvasCoord.x;
+		float canvasY = canvasCoord.y;
+		
+		float screenX = canvasX * scaleFactor + currentX;
+		float screenY = canvasY * scaleFactor + currentY;
+		
+		return new PointF(screenX, screenY);
 	}
 }
