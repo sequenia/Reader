@@ -48,8 +48,8 @@ public class ReaderSurface extends GestureSurface {
 	@Override
 	public void surfaceCreated(SurfaceHolder arg0) {
 		PointF screenSize = getScreenSize(getSurfaceContext());
-		settings.screenWidth = screenSize.x;
-		settings.screenHeight = screenSize.y;
+		settings.setScreenWidth(screenSize.x);
+		settings.setScreenHeight(screenSize.y);
 		
 		reader = new Reader(settings);
 
@@ -77,11 +77,9 @@ public class ReaderSurface extends GestureSurface {
 			PointF distance = accelTranslation.move(time);
 			
 			if(accelTranslation.directionChanged || accelTranslation.stoped) {
-				state = ReaderState.NOTHING;
-				translation = null;
+				stopTranslation();
 			} else {
-				currentX += distance.x;
-				currentY += distance.y;
+				moveCanvas(distance.x, distance.y);
 			}
 			break;
 
@@ -90,8 +88,7 @@ public class ReaderSurface extends GestureSurface {
 			float scale = accelScaling.move(time);
 			
 			if(accelScaling.directionChanged || accelScaling.stoped) {
-				state = ReaderState.NOTHING;
-				translation = null;
+				stopTranslation();
 				if(scaleFactor >= settings.toReadModeSensivity) {
 					moveToPage();
 				}
@@ -100,9 +97,7 @@ public class ReaderSurface extends GestureSurface {
 				  (scaleFactor < 1.0f && scale > 1.0f || scaleFactor >= 1.0f && scale <= 1.0f)) {
 					moveToPage();
 				} else {
-					float focusX = settings.screenWidth / 2.0f;
-					float focusY = settings.screenHeight / 2.0f;
-					scaleCanvas(scale, new PointF(focusX, focusY));
+					scaleCanvas(scale, new PointF(settings.halfScreenWidth, settings.halfScreenHeight));
 				}
 			}
 			break;
@@ -115,15 +110,10 @@ public class ReaderSurface extends GestureSurface {
 				currentX = uniformMotion.pointToMove.x;
 				currentY = uniformMotion.pointToMove.y;
 				scaleFactor = uniformMotion.pointToMove.s;
-				state = ReaderState.NOTHING;
-				translation = null;
+				stopTranslation();
 			} else {
-				currentX += result.x * uniformMotion.ss;
-				currentY += result.y * uniformMotion.ss;
-
-				float focusX = settings.screenWidth / 2.0f;
-				float focusY = settings.screenHeight / 2.0f;
-				scaleCanvas(result.s, new PointF(focusX, focusY));
+				moveCanvas(result.x, result.y);
+				scaleCanvas(result.s, new PointF(settings.halfScreenWidth, settings.halfScreenHeight));
 			}
 			break;
 			
@@ -288,10 +278,10 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void moveToPage() {
-		float pageX = 2.0f * settings.screenWidth;
-		float pageY = 2.0f * settings.screenHeight;
-		float pageWidth = settings.screenWidth;
-		float pageHeight = settings.screenHeight;
+		float pageX = 2.0f * settings.getScreenWidth();
+		float pageY = 2.0f * settings.getScreenHeight();
+		float pageWidth = settings.getScreenWidth();
+		float pageHeight = settings.getScreenHeight();
 
 		// Координаты канваса относительно экрана после движения
 		float canvasNeededX = - pageX;
@@ -303,15 +293,11 @@ public class ReaderSurface extends GestureSurface {
 		float pageCenterY = pageY + pageHeight / 2.0f;
 		
 		// Центр страницы относительно экрана
-		PointF sreenPageCenter = canvasToScreenCoord(new PointF(pageCenterX, pageCenterY), settings.screenWidth, settings.screenHeight);
-		
-		// Цент экрана относительно экрана
-		float screenCenterX = settings.screenWidth / 2.0f;
-		float screenCenterY = settings.screenHeight / 2.0f;
+		PointF sreenPageCenter = canvasToScreenCoord(new PointF(pageCenterX, pageCenterY), settings.getScreenWidth(), settings.getScreenHeight());
 		
 		// Расстояние, которое должен пройти канвас относительно экранаs
-		float distanceX = screenCenterX - sreenPageCenter.x;
-		float distanceY = screenCenterY - sreenPageCenter.y;
+		float distanceX = settings.halfScreenWidth - sreenPageCenter.x;
+		float distanceY = settings.halfScreenHeight - sreenPageCenter.y;
 		float distanceScale = canvasNeededScale / scaleFactor;
 		
 		float xV = distanceX / settings.toReadTime;
@@ -342,5 +328,10 @@ public class ReaderSurface extends GestureSurface {
 		float screenY = canvasY * scaleFactor + currentY;
 		
 		return new PointF(screenX, screenY);
+	}
+	
+	private void stopTranslation() {
+		state = ReaderState.NOTHING;
+		translation = null;
 	}
 }

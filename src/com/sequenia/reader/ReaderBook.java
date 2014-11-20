@@ -23,7 +23,7 @@ class ReaderBook extends ReaderGroupWithSize {
 	private Paint borderPaintWhenPagesShown;
 	
 	public ReaderBook(ReaderSettings settings) {
-		super(settings.screenWidth, settings.screenHeight);
+		super(settings.getScreenWidth(), settings.getScreenHeight());
 		pages = new ArrayList<ReaderPage>();
 		pagesInterval = new Interval(0.05f, 100.0f, false, true);
 		fullInfoInterval = new Interval(0.02f, 0.05f, false, true);

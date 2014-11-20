@@ -120,6 +120,9 @@ class UniformMotion extends Translation {
 		float dx = vx * t;
 		float dy = vy * t;
 		
+		float dxRes = dx * ss;
+		float dyRes = dy * ss;
+		
 		sx += dx;
 		sy += dy;
 		
@@ -154,9 +157,13 @@ class UniformMotion extends Translation {
 			if(translationEnded && scalingEnded) {
 				stoped = true;
 			}
+			
+			System.out.println("--------------------");
+			System.out.println(translationEnded);
+			System.out.println(scalingEnded);
 		}
 		
-		return new UniformMotionResult(dx, dy, ds);
+		return new UniformMotionResult(dxRes, dyRes, ds);
 	}
 	
 	public static class UniformMotionResult {

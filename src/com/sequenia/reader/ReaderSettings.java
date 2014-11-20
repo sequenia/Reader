@@ -53,8 +53,10 @@ public class ReaderSettings {
 	float maxScaleVelocity = 30.0f;
 	float minScaleVelocity = 1.0f / maxScaleVelocity;
 	
-	float screenWidth = 0.0f;
-	float screenHeight = 0.0f;
+	private float screenWidth = 0.0f;
+	private float screenHeight = 0.0f;
+	float halfScreenWidth = 0.0f;
+	float halfScreenHeight = 0.0f;
 
 	public ReaderSettings() {
 		initPaint();
@@ -118,5 +120,23 @@ public class ReaderSettings {
 		bookBorderPaint.setStrokeWidth(bookBorderSize);
 		bookBorderPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 		bookBorderPaint.setAntiAlias(true);
+	}
+	
+	public float getScreenWidth() {
+		return screenWidth;
+	}
+	
+	public void setScreenWidth(float _screenWidth) {
+		screenWidth = _screenWidth;
+		halfScreenWidth = screenWidth / 2.0f;
+	}
+	
+	public float getScreenHeight() {
+		return screenHeight;
+	}
+	
+	public void setScreenHeight(float _screenHeight) {
+		screenHeight = _screenHeight;
+		halfScreenHeight = screenHeight / 2.0f;
 	}
 }

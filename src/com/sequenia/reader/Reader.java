@@ -43,9 +43,9 @@ public class Reader {
 			int pagesCount = (b + 1) * 100;
 			int pagesPerLine = (int) Math.ceil(Math.sqrt(pagesCount));
 			for(int i = 0; i < pagesCount; i++) {
-				ReaderPage page = new ReaderPage(settings.screenWidth, settings.screenHeight, settings);
+				ReaderPage page = new ReaderPage(settings.getScreenWidth(), settings.getScreenHeight(), settings);
 				
-				page.setPosition((float)(i % pagesPerLine) * settings.screenWidth, (float)(i / pagesPerLine) * settings.screenHeight);
+				page.setPosition((float)(i % pagesPerLine) * settings.getScreenWidth(), (float)(i / pagesPerLine) * settings.getScreenHeight());
 				if(i < 74) {
 					page.setIsRead(true);
 				}
@@ -63,8 +63,8 @@ public class Reader {
 				readerBook.addPage(page);
 			}
 			
-			float width = pagesPerLine * settings.screenWidth;
-			float height = (float) (Math.ceil(((float)pagesCount / (float)pagesPerLine)) * settings.screenHeight);
+			float width = pagesPerLine * settings.getScreenWidth();
+			float height = (float) (Math.ceil(((float)pagesCount / (float)pagesPerLine)) * settings.getScreenHeight());
 			readerBook.setWidth(width);
 			readerBook.setHeight(height);
 			readerBook.createBorders(settings.bookBorderPaint);
