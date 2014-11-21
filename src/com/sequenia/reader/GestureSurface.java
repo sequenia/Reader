@@ -6,6 +6,14 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 
+/*
+ * Класс холста с реализованными методами детекторов жестов:
+ *   Детектор масштабирования ScaleGestureDetector
+ *   Детектор жестов          GestureDetectorCompat
+ *   
+ * Данный класс необходимо использовать тогда,
+ * когда вы хотите обработать взаимодействие пользователя с системой
+ */
 public class GestureSurface extends Surface {
 	private ScaleGestureDetector mScaleDetector;
 	private GestureDetectorCompat mDetector;

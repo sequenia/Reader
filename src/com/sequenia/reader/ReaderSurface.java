@@ -71,6 +71,21 @@ public class ReaderSurface extends GestureSurface {
 
 		updatePaints();
 		
+		switch(mode) {
+		case OVERVIEW:
+			overviewUpdate(time);
+			break;
+
+		case READING:
+			readingUpdate(time);
+			break;
+
+		default:
+			break;
+		}
+	}
+	
+	private void overviewUpdate(float time) {
 		switch (state) {
 		case ACCEL_TRANSLATION:
 			AccelTranslation accelTranslation = (AccelTranslation) translation;
@@ -123,6 +138,10 @@ public class ReaderSurface extends GestureSurface {
 		}
 	}
 	
+	private void readingUpdate(float time) {
+		
+	}
+	
 	private void updatePaints() {
 		settings.pageBorderPaint.setStrokeWidth(settings.pageBorderSize / scaleFactor);
 		settings.currentPageBorderPaint.setStrokeWidth(settings.currentPageBorderSize / scaleFactor);
@@ -130,83 +149,22 @@ public class ReaderSurface extends GestureSurface {
 		settings.bookPagesBorderPaint.setStrokeWidth(settings.bookPagesBorderSize / scaleFactor);
 	}
 	
-	private void moveCanvas(float dx, float dy) {
-		currentX += dx;
-		currentY += dy;
-	}
-	
-	private void scaleCanvas(float dScale, PointF focus) {
-		scaleFactor *= dScale;
-		
-		// Ищем вектор, указывающий из фокуса в позицию канваса
-		PointF vecToPos = new PointF(currentX - focus.x, currentY - focus.y);
-		
-		float vecMultiplyer = dScale - 1;
-		float dx = vecToPos.x * vecMultiplyer;
-		float dy = vecToPos.y * vecMultiplyer;
-		
-		moveCanvas(dx, dy);
-	}
-	
 	@Override
 	public void onSurfaceTouch(MotionEvent event) {
 		float x = event.getX();
 		float y = event.getY();
 		
-		boolean activePointerIdChanged = activePointerChanged(event);
-		
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_MOVE:
-			if((state == ReaderState.NOTHING || state == ReaderState.TRANSLATION) && !activePointerIdChanged) {
-				state = ReaderState.TRANSLATION;
-
-				float dx = 0.0f;
-				float dy = 0.0f;
-				
-				switch (mode) {
-				case OVERVIEW:
-					dx = x - prevX;
-					dy = y - prevY;
-					break;
-
-				case READING:
-					dx = x - prevX;
-					break;
-					
-				default:
-					break;
-				}
-				
-				moveCanvas(dx, dy);
-			}
-
+			onActionMove(x, y, event);
 			break;
 			
 		case MotionEvent.ACTION_DOWN:
-			if(state != ReaderState.TO_READ_CORRECTION) {
-				state = ReaderState.NOTHING;
-			}
+			onActionDown(x, y, event);
 			break;
 
 		case MotionEvent.ACTION_UP:
-			if(state == ReaderState.TRANSLATION) {
-				switch (mode) {
-				case OVERVIEW:
-					if(scaleFactor >= settings.toReadModeSensivity) {
-						moveToPage();
-					} else {
-						state = ReaderState.NOTHING;
-					}
-					break;
-
-				case READING:
-					state = ReaderState.NOTHING;
-					break;
-					
-				default:
-					break;
-				}
-			}
+			onActionUp(x, y, event);
 			break;
 
 		default:
@@ -217,8 +175,58 @@ public class ReaderSurface extends GestureSurface {
 		prevY = y;
 	}
 	
-	public void overviewMove() {
-		
+	private void onActionMove(float x, float y, MotionEvent event) {
+		boolean activePointerIdChanged = activePointerChanged(event);
+
+		if((state == ReaderState.NOTHING || state == ReaderState.TRANSLATION) && !activePointerIdChanged) {
+			state = ReaderState.TRANSLATION;
+
+			float dx = 0.0f;
+			float dy = 0.0f;
+			
+			switch (mode) {
+			case OVERVIEW:
+				dx = x - prevX;
+				dy = y - prevY;
+				break;
+
+			case READING:
+				dx = x - prevX;
+				break;
+				
+			default:
+				break;
+			}
+			
+			moveCanvas(dx, dy);
+		}
+	}
+	
+	private void onActionDown(float x, float y, MotionEvent event) {
+		if(state != ReaderState.TO_READ_CORRECTION) {
+			state = ReaderState.NOTHING;
+		}
+	}
+	
+	private void onActionUp(float x, float y, MotionEvent event) {
+		if(state == ReaderState.TRANSLATION) {
+			switch (mode) {
+			case OVERVIEW:
+				if(scaleFactor >= settings.toReadModeSensivity) {
+					moveToPage();
+				} else {
+					state = ReaderState.NOTHING;
+				}
+				break;
+
+			case READING:
+				state = ReaderState.NOTHING;
+				break;
+				
+			default:
+				break;
+			}
+		}
 	}
 	
 	@Override
@@ -325,6 +333,24 @@ public class ReaderSurface extends GestureSurface {
 		float screenWidth = (float)dm.widthPixels;
 		
 		return new PointF(screenWidth, screenHeight);
+	}
+	
+	private void moveCanvas(float dx, float dy) {
+		currentX += dx;
+		currentY += dy;
+	}
+	
+	private void scaleCanvas(float dScale, PointF focus) {
+		scaleFactor *= dScale;
+		
+		// Ищем вектор, указывающий из фокуса в позицию канваса
+		PointF vecToPos = new PointF(currentX - focus.x, currentY - focus.y);
+		
+		float vecMultiplyer = dScale - 1;
+		float dx = vecToPos.x * vecMultiplyer;
+		float dy = vecToPos.y * vecMultiplyer;
+		
+		moveCanvas(dx, dy);
 	}
 	
 	private void moveToPage() {
