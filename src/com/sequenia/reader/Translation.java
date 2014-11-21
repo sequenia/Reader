@@ -2,13 +2,16 @@ package com.sequenia.reader;
 
 import android.graphics.PointF;
 
+/*
+ * Класс используется для расчета перемещений разных типов.
+ */
 public class Translation {
 	public enum TranslationType {
 		ACCEL_TRANSLATION, ACCEL_SCALING, UNIFORM_TRANSLATION, UNIFORM_SCALING, UNIFORM_MOTION
 	}
 	
 	TranslationType type;
-	boolean stoped = false;
+	boolean stoped = false; // Закончилось ли перемещение
 	
 	public Translation() {
 		
@@ -19,9 +22,10 @@ public class Translation {
 	}
 }
 
+// Используется для расчета равномерного движения
 class UniformTranslation extends Translation {
-	public PointF v;
-	public PointF d;
+	public PointF v; // Скорость
+	public PointF d; // Пройденный путь
 	
 	public UniformTranslation() {
 		super(TranslationType.UNIFORM_TRANSLATION);
@@ -46,9 +50,10 @@ class UniformTranslation extends Translation {
 	}
 }
 
+// Используется для расчета равномерного масштабирования
 class UniformScaling extends Translation {
-	public float v;
-	public float s;
+	public float v; // Скорость масштабирования
+	public float s; // Общее масштабирование
 	
 	public UniformScaling() {
 		super(TranslationType.UNIFORM_SCALING);
@@ -62,6 +67,18 @@ class UniformScaling extends Translation {
 		s = 1.0f;
 	}
 	
+	/*
+	 *  Здесь пройденный "путь" (Масштаб) умножается на приращение.
+	 *  Приращение не прибавляется, как в случае равномерного движения,
+	 *  так как скорость масштабирования показывает, ВО сколько раз увеличился масштаб
+	 *  за единицу времени, а не НА сколько.
+	 *  
+	 *  В связи с этим изменяется и формула расчета приращения.
+	 *  Умножение скорости на время заменяется на возведение в степень.
+	 *  
+	 *  То есть любая формула будет иметь вид, аналогичный прямолинейному движению,
+	 *  только сложение заменено на умножение, а умножение на возведение в степень.
+	 */ 
 	public float move(float t) {
 		float ds = (float) Math.pow(v, t);
 		
@@ -71,6 +88,7 @@ class UniformScaling extends Translation {
 	}
 }
 
+// Объединяет в себе равномерное движение и равномерное масштабирование
 class UniformMotion extends Translation {
 	public float vx;
 	public float vy;
@@ -80,8 +98,8 @@ class UniformMotion extends Translation {
 	public float sy;
 	public float ss;
 	
-	UniformMotionResult needs;
-	UniformMotionResult pointToMove;
+	UniformMotionResult needs;          // Путь, который нужно пройти в результате движения
+	UniformMotionResult pointToMove;    // Точка, в которой нужно оказаться в рузельтате движения
 	
 	public UniformMotion() {
 		super(TranslationType.UNIFORM_MOTION);
@@ -120,6 +138,9 @@ class UniformMotion extends Translation {
 		float dx = vx * t;
 		float dy = vy * t;
 		
+		// Приращение домножается на пройденный масштаб.
+		// Это необходимо для корректного перемещения холста во время масштабирования,
+		// так как он меняет свою позицию относительно экрана при масштабировании
 		float dxRes = dx * ss;
 		float dyRes = dy * ss;
 		
@@ -157,10 +178,6 @@ class UniformMotion extends Translation {
 			if(translationEnded && scalingEnded) {
 				stoped = true;
 			}
-			
-			System.out.println("--------------------");
-			System.out.println(translationEnded);
-			System.out.println(scalingEnded);
 		}
 		
 		return new UniformMotionResult(dxRes, dyRes, ds);
