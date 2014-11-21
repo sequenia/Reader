@@ -7,6 +7,7 @@ import android.graphics.Paint;
 
 class ReaderBook extends ReaderGroupWithSize {
 	private ArrayList<ReaderPage> pages;
+	private ArrayList<ReaderPage> pagesToDraw;
 	
 	private ArrayList<ReaderText> title;
 	private ArrayList<ReaderText> creator;
@@ -25,6 +26,8 @@ class ReaderBook extends ReaderGroupWithSize {
 	public ReaderBook(ReaderSettings settings) {
 		super(settings.getScreenWidth(), settings.getScreenHeight());
 		pages = new ArrayList<ReaderPage>();
+		pagesToDraw = new ArrayList<ReaderPage>();
+		
 		pagesInterval = new Interval(0.05f, 100.0f, false, true);
 		fullInfoInterval = new Interval(0.02f, 0.05f, false, true);
 		minInfoInterval = new Interval(0.0001f, 0.02f, false, true);
@@ -40,19 +43,32 @@ class ReaderBook extends ReaderGroupWithSize {
 		borderPaintWhenPagesShown = settings.bookPagesBorderPaint;
 	}
 	
+	public void update(Canvas canvas) {
+		pagesToDraw = findPagesToDraw(canvas);
+	}
+	
+	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas) {
+		ArrayList<ReaderPage> toDraw = new ArrayList<ReaderPage>();
+		
+		for(int i = 0; i < pages.size(); i++) {
+			ReaderPage page = pages.get(i);
+			
+			if(page.isInScreen(canvas)) {
+				toDraw.add(page);
+			}
+		}
+		
+		return toDraw;
+	}
+	
 	@Override
 	public boolean draw(Canvas canvas, float zoom) {
-		boolean inScreen = super.draw(canvas, zoom);
-		
-		if(inScreen) {
 			if(minInfoInterval.isIn(zoom)) {
-				System.out.println("min");
 				drawMinInfo(canvas, zoom);
 				drawBorders(canvas, zoom);
 			}
 
 			if(fullInfoInterval.isIn(zoom)) {
-				System.out.println("max");
 				drawFullInfo(canvas, zoom);
 				drawBorders(canvas, zoom);
 			}
@@ -61,9 +77,7 @@ class ReaderBook extends ReaderGroupWithSize {
 				drawPages(canvas, zoom);
 				drawBordersWhenPagesShown(canvas, zoom);
 			}
-		}
-
-		return inScreen;
+		return true;
 	}
 	
 	public boolean drawMinInfo(Canvas canvas, float zoom) {
@@ -81,8 +95,8 @@ class ReaderBook extends ReaderGroupWithSize {
 	}
 	
 	public boolean drawPages(Canvas canvas, float zoom) {
-		for(int i = 0; i < pages.size(); i++) {
-			pages.get(i).draw(canvas, zoom);
+		for(int i = 0; i < pagesToDraw.size(); i++) {
+			pagesToDraw.get(i).draw(canvas, zoom);
 		}
 		return true;
 	}

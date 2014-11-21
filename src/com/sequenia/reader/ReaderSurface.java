@@ -15,7 +15,7 @@ import android.view.Window;
 
 public class ReaderSurface extends GestureSurface {
 	public static enum ReaderState {
-		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING, TO_READ_CORRECTION
+		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING, TO_READ_CORRECTION, WAITING_FOR_TO_READ_CORRECTION
 	}
 	public static enum ReaderMode {
 		OVERVIEW, READING
@@ -58,17 +58,20 @@ public class ReaderSurface extends GestureSurface {
 	
 	@Override
 	public void draw(Canvas canvas, long delta) {
-		update(delta);
+		float time = (float) delta / 1000.0f;
+
+		update(time);
 		
 		canvas.translate(currentX, currentY);
 		canvas.scale(scaleFactor, scaleFactor);
+		
+		reader.update(canvas);
+		postUpdate(delta);
 
 		reader.draw(canvas, delta, scaleFactor);
 	}
 	
-	private void update(long delta) {
-		float time = (float) delta / 1000.0f;
-
+	private void update(float time) {
 		updatePaints();
 		
 		switch(mode) {
@@ -78,6 +81,17 @@ public class ReaderSurface extends GestureSurface {
 
 		case READING:
 			readingUpdate(time);
+			break;
+
+		default:
+			break;
+		}
+	}
+	
+	private void postUpdate(float time) {
+		switch(state) {
+		case WAITING_FOR_TO_READ_CORRECTION:
+			moveToNearestPage();
 			break;
 
 		default:
@@ -105,12 +119,12 @@ public class ReaderSurface extends GestureSurface {
 			if(accelScaling.directionChanged || accelScaling.stoped) {
 				stopTranslation();
 				if(scaleFactor >= settings.toReadModeSensivity) {
-					moveToPage();
+					state = ReaderState.WAITING_FOR_TO_READ_CORRECTION;
 				}
 			} else {
 				if(scaleFactor >= settings.toReadModeSensivity &&
 				  (scaleFactor < 1.0f && scale > 1.0f || scaleFactor >= 1.0f && scale <= 1.0f)) {
-					moveToPage();
+					state = ReaderState.WAITING_FOR_TO_READ_CORRECTION;
 				} else {
 					scaleCanvas(scale, new PointF(settings.halfScreenWidth, settings.halfScreenHeight));
 				}
@@ -213,7 +227,7 @@ public class ReaderSurface extends GestureSurface {
 			switch (mode) {
 			case OVERVIEW:
 				if(scaleFactor >= settings.toReadModeSensivity) {
-					moveToPage();
+					state = ReaderState.WAITING_FOR_TO_READ_CORRECTION;
 				} else {
 					state = ReaderState.NOTHING;
 				}
@@ -264,7 +278,7 @@ public class ReaderSurface extends GestureSurface {
 			state = ReaderState.ACCEL_SCALING;
 		} else {
 			if(scaleFactor >= settings.toReadModeSensivity) {
-				moveToPage();
+				state = ReaderState.WAITING_FOR_TO_READ_CORRECTION;
 			} else {
 				state = ReaderState.NOTHING;
 			}
@@ -353,11 +367,21 @@ public class ReaderSurface extends GestureSurface {
 		moveCanvas(dx, dy);
 	}
 	
-	private void moveToPage() {
-		float pageX = 2.0f * settings.getScreenWidth();
-		float pageY = 2.0f * settings.getScreenHeight();
-		float pageWidth = settings.getScreenWidth();
-		float pageHeight = settings.getScreenHeight();
+	private void moveToNearestPage() {
+		ReaderPage nearestPage = reader.getNearestPage();
+		moveToPage(nearestPage);
+	}
+	
+	private void moveToPage(ReaderPage page) {
+		if(page == null) {
+			state = ReaderState.NOTHING;
+			return; 
+		}
+
+		float pageX = page.getAbsoluteX();
+		float pageY = page.getAbsoluteY();
+		float pageWidth = page.getWidth();
+		float pageHeight = page.getHeight();
 
 		// Координаты канваса относительно экрана после движения
 		float canvasNeededX = - pageX;

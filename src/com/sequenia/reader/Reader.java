@@ -8,15 +8,19 @@ public class Reader {
 	private ReaderSettings settings;
 	private ArrayList<ReaderBook> books;
 	
+	private ArrayList<ReaderBook> booksToDraw;
+	
 	public Reader() {
 		settings = new ReaderSettings();
 		books = new ArrayList<ReaderBook>();
+		booksToDraw = new ArrayList<ReaderBook>();
 		initObjects();
 	}
 	
 	public Reader(ReaderSettings _settings) {
 		settings = _settings;
 		books = new ArrayList<ReaderBook>();
+		booksToDraw = new ArrayList<ReaderBook>();
 		initObjects();
 	}
 	
@@ -74,11 +78,44 @@ public class Reader {
 		}
 	}
 	
+	public void update(Canvas canvas) {
+		booksToDraw = findBooksToDraw(canvas);
+	}
+	
+	private ArrayList<ReaderBook> findBooksToDraw(Canvas canvas) {
+		ArrayList<ReaderBook> toDraw = new ArrayList<ReaderBook>();
+		
+		for(int i = 0; i < books.size(); i++) {
+			ReaderBook book = books.get(i);
+			
+			if(book.isInScreen(canvas)) {
+				toDraw.add(book);
+				book.update(canvas);
+			}
+		}
+		
+		return toDraw;
+	}
+	
 	public void draw(Canvas canvas, long delta, float zoom) {
 		canvas.drawPaint(settings.bgPaint);
 		
-		for(int i = 0; i < books.size(); i++) {
-			books.get(i).draw(canvas, zoom);
+		for(int i = 0; i < booksToDraw.size(); i++) {
+			booksToDraw.get(i).draw(canvas, zoom);
 		}
+	}
+	
+	public ReaderPage getNearestPage() {
+		/*ReaderPage nearestPage = null;
+		
+		for(int i = 0; i < booksToDraw.size(); i++) {
+			ReaderBook book = booksToDraw.get(i);
+			ArrayList<ReaderPage> pages = book.getPages();
+			for(int j = 0; j < pages.size(); j++) {
+				
+			}
+		}*/
+		
+		return books.get(0).getPages().get(13);
 	}
 }

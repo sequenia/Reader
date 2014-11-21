@@ -245,7 +245,7 @@ class ReaderGroupWithSize extends ReaderGroup {
 		borders[3] = borderLeft;
 	}
 	
-	private boolean isInScreen(Canvas canvas) {
+	public boolean isInScreen(Canvas canvas) {
 		Rect rect = canvas.getClipBounds();
 		return !(getAbsoluteX() > rect.right ||
 				getAbsoluteX() + width < rect.left ||
