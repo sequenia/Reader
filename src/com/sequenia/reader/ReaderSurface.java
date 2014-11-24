@@ -13,6 +13,14 @@ import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.Window;
 
+/*
+ * Холст читалки.
+ * Рисует книги читалки.
+ * Выполняет определенные действия в ответ на жесты пользователя:
+ * - Увеличивает и уменьшает масштаб
+ * - Перелистывает страницы,
+ * - и т.д.
+ */
 public class ReaderSurface extends GestureSurface {
 	public static enum ReaderState {
 		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING,
@@ -21,10 +29,10 @@ public class ReaderSurface extends GestureSurface {
 	public static enum ReaderMode {
 		OVERVIEW, READING
 	}
-	Translation translation;
-	ReaderMode mode;
+	Translation translation;   // Занимается расчетом пройденного расстояния и масштаба при перемещении
+	ReaderMode mode;           // Текущий режим - чтение, обзор и т.п.
 
-	private ReaderState state;
+	private ReaderState state; // Текущее состояние - движение, движение с ускорением, движение к странице и т.д.
 	private Reader reader;
 	
 	float currentX = 0.0f;
