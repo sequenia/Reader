@@ -47,7 +47,7 @@ public class ReaderSurface extends GestureSurface {
 	
 	@Override
 	public void surfaceCreated(SurfaceHolder arg0) {
-		PointF screenSize = getScreenSize(getSurfaceContext());
+		PointF screenSize = getScreenSize(getContext());
 		settings.setScreenWidth(screenSize.x);
 		settings.setScreenHeight(screenSize.y);
 		
@@ -61,14 +61,16 @@ public class ReaderSurface extends GestureSurface {
 		float time = (float) delta / 1000.0f;
 
 		update(time);
-		
-		canvas.translate(currentX, currentY);
-		canvas.scale(scaleFactor, scaleFactor);
-		
+		updateCanvasMatrix(canvas);
 		reader.update(canvas);
-		postUpdate(delta);
+		postUpdate(time);
 
 		reader.draw(canvas, delta, scaleFactor);
+	}
+	
+	private void updateCanvasMatrix(Canvas canvas) {
+		canvas.translate(currentX, currentY);
+		canvas.scale(scaleFactor, scaleFactor);
 	}
 	
 	private void update(float time) {
@@ -135,10 +137,16 @@ public class ReaderSurface extends GestureSurface {
 			UniformMotion uniformMotion = (UniformMotion) translation;
 			UniformMotionResult result = uniformMotion.move(time);
 			
+			ReaderPage page = (ReaderPage)uniformMotion.pointToMove;
+			
 			if(uniformMotion.stoped) {
-				currentX = uniformMotion.pointToMove.x;
-				currentY = uniformMotion.pointToMove.y;
-				scaleFactor = uniformMotion.pointToMove.s;
+				currentX = - page.getAbsoluteX();
+				currentY = - page.getAbsoluteY();
+				scaleFactor = 1.0f;
+				
+				ReaderBook book = (ReaderBook) page.getParent();
+				book.setCurrentPage(page);
+				
 				stopTranslation();
 				mode = ReaderMode.READING;
 			} else {
@@ -368,7 +376,9 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void moveToNearestPage() {
-		ReaderPage nearestPage = reader.getNearestPage();
+		PointF screenCenter = new PointF(settings.halfScreenWidth, settings.halfScreenHeight);
+		PointF screenCenterOnCanvas = screenToCanvasCoord(screenCenter, settings.getScreenWidth(), settings.getScreenHeight());
+		ReaderPage nearestPage = reader.getNearestPage(screenCenterOnCanvas.x, screenCenterOnCanvas.y);
 		moveToPage(nearestPage);
 	}
 	
@@ -382,11 +392,6 @@ public class ReaderSurface extends GestureSurface {
 		float pageY = page.getAbsoluteY();
 		float pageWidth = page.getWidth();
 		float pageHeight = page.getHeight();
-
-		// Координаты канваса относительно экрана после движения
-		float canvasNeededX = - pageX;
-		float canvasNeededY = - pageY;
-		float canvasNeededScale = 1.0f;
 		
 		// Центр страницы на канвасе
 		float pageCenterX = pageX + pageWidth / 2.0f;
@@ -395,10 +400,10 @@ public class ReaderSurface extends GestureSurface {
 		// Центр страницы относительно экрана
 		PointF sreenPageCenter = canvasToScreenCoord(new PointF(pageCenterX, pageCenterY), settings.getScreenWidth(), settings.getScreenHeight());
 		
-		// Расстояние, которое должен пройти канвас относительно экранаs
+		// Расстояние, которое должен пройти канвас относительно экрана
 		float distanceX = settings.halfScreenWidth - sreenPageCenter.x;
 		float distanceY = settings.halfScreenHeight - sreenPageCenter.y;
-		float distanceScale = canvasNeededScale / scaleFactor;
+		float distanceScale = 1.0f / scaleFactor;
 		
 		float xV = distanceX / settings.toReadTime;
 		float yV = distanceY / settings.toReadTime;
@@ -406,7 +411,7 @@ public class ReaderSurface extends GestureSurface {
 		
 		translation = new UniformMotion(xV, yV, scaleV);
 		((UniformMotion) translation).needs = new UniformMotionResult(distanceX, distanceY, distanceScale);
-		((UniformMotion) translation).pointToMove = new UniformMotionResult(canvasNeededX, canvasNeededY, canvasNeededScale);
+		((UniformMotion) translation).pointToMove = page;
 		state = ReaderState.TO_READ_CORRECTION;
 	}
 	

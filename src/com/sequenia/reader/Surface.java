@@ -11,7 +11,6 @@ import android.view.SurfaceView;
  * Рисование происходит в отдельном потоке, чтобы не грузить UI Thread.
  */
 public class Surface extends SurfaceView implements SurfaceHolder.Callback {
-	private Context context;
 	private DrawThread drawThread;
 
 	private boolean created = false;
@@ -28,7 +27,6 @@ public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 		getHolder().addCallback(this); // Данный метод возвращает canvas для рисования.
 		// Спомощью addCalback мы синхронизируем его работу с текущим классом.
 		
-		context = _context;
 		drawThread = null;
 	}
 
@@ -134,13 +132,5 @@ public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 				}
 			}
 		}
-	}
-	
-	public Context getSurfaceContext() {
-		return context;
-	}
-	
-	public void setSurfaceContext(Context _context) {
-		context = _context;
 	}
 }

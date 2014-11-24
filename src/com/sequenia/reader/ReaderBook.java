@@ -8,6 +8,7 @@ import android.graphics.Paint;
 class ReaderBook extends ReaderGroupWithSize {
 	private ArrayList<ReaderPage> pages;
 	private ArrayList<ReaderPage> pagesToDraw;
+	private ReaderPage currentPage;
 	
 	private ArrayList<ReaderText> title;
 	private ArrayList<ReaderText> creator;
@@ -27,6 +28,7 @@ class ReaderBook extends ReaderGroupWithSize {
 		super(settings.getScreenWidth(), settings.getScreenHeight());
 		pages = new ArrayList<ReaderPage>();
 		pagesToDraw = new ArrayList<ReaderPage>();
+		currentPage = null;
 		
 		pagesInterval = new Interval(0.05f, 100.0f, false, true);
 		fullInfoInterval = new Interval(0.02f, 0.05f, false, true);
@@ -170,8 +172,26 @@ class ReaderBook extends ReaderGroupWithSize {
 		return pages;
 	}
 	
+	public ArrayList<ReaderPage> getPagesToDraw() {
+		return pagesToDraw;
+	}
+	
 	public void addPage(ReaderPage page) {
 		pages.add(page);
 		addChild(page);
+	}
+	
+	public void setCurrentPage(ReaderPage page) {
+		if(currentPage != null) {
+			currentPage.setIsCurrent(false);
+		}
+		
+		page.setIsRead(true);
+		page.setIsCurrent(true);
+		currentPage = page;
+	}
+	
+	public ReaderPage getCurrentPage() {
+		return currentPage;
 	}
 }

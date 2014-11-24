@@ -99,7 +99,7 @@ class UniformMotion extends Translation {
 	public float ss;
 	
 	UniformMotionResult needs;          // Путь, который нужно пройти в результате движения
-	UniformMotionResult pointToMove;    // Точка, в которой нужно оказаться в рузельтате движения
+	Object pointToMove;                 // Точка, в которой нужно оказаться в рузельтате движения
 	
 	public UniformMotion() {
 		super(TranslationType.UNIFORM_MOTION);

@@ -1,7 +1,6 @@
 package com.sequenia.reader;
 
 import java.util.ArrayList;
-
 import android.graphics.Canvas;
 
 public class Reader {
@@ -53,8 +52,8 @@ public class Reader {
 				if(i < 74) {
 					page.setIsRead(true);
 				}
-				if(i == 13) {
-					page.setIsCurrent(true);
+				if(i == 0) {
+					readerBook.setCurrentPage(page);
 				}
 				
 				for(int j = 0; j < 10; j++) {
@@ -105,17 +104,31 @@ public class Reader {
 		}
 	}
 	
-	public ReaderPage getNearestPage() {
-		/*ReaderPage nearestPage = null;
+	public ReaderPage getNearestPage(float canvasX, float canvasY) {
+		ReaderPage nearestPage = null;
+		float minDistance = 1000000000.0f;
 		
 		for(int i = 0; i < booksToDraw.size(); i++) {
 			ReaderBook book = booksToDraw.get(i);
-			ArrayList<ReaderPage> pages = book.getPages();
+			ArrayList<ReaderPage> pages = book.getPagesToDraw();
 			for(int j = 0; j < pages.size(); j++) {
+				ReaderPage page = pages.get(j);
 				
+				float pageCenterX = page.getAbsoluteX() + page.getWidth() / 2.0f;
+				float pageCenterY = page.getAbsoluteY() + page.getHeight() / 2.0f;
+				
+				float x = canvasX - pageCenterX;
+				float y = canvasY - pageCenterY;
+				
+				float distance = (float) Math.sqrt(x * x + y * y);
+				
+				if(distance < minDistance) {
+					minDistance = distance;
+					nearestPage = page;
+				}
 			}
-		}*/
+		}
 		
-		return books.get(0).getPages().get(13);
+		return nearestPage;
 	}
 }

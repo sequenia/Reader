@@ -18,11 +18,11 @@ public class GestureSurface extends Surface {
 	private ScaleGestureDetector mScaleDetector;
 	private GestureDetectorCompat mDetector;
 	
-	public GestureSurface(Context _context) {
-		super(_context);
+	public GestureSurface(Context context) {
+		super(context);
 		
-		mDetector = new GestureDetectorCompat(_context, new GestureListener());
-		mScaleDetector = new ScaleGestureDetector(_context, new ScaleListener());
+		mDetector = new GestureDetectorCompat(context, new GestureListener());
+		mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
 	}
 	
 	public void onSurfaceFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -49,7 +49,7 @@ public class GestureSurface extends Surface {
 	public boolean onTouchEvent(MotionEvent event) {
 		mScaleDetector.onTouchEvent(event);
 		mDetector.onTouchEvent(event);
-
+		
 		onSurfaceTouch(event);
 		
 		return true;
