@@ -3,6 +3,12 @@ package com.sequenia.reader;
 import java.util.ArrayList;
 import android.graphics.Canvas;
 
+/*
+ * Читалка.
+ * Объект этого класса содержит в себе книги, которые нужно показать на экране,
+ * и умеет их рисовать.
+ * Рисуются только те книги, которые были помещены в список booksToDraw.
+ */
 public class Reader {
 	private ReaderSettings settings;
 	private ArrayList<ReaderBook> books;

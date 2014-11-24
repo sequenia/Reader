@@ -5,6 +5,15 @@ import java.util.ArrayList;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
+/*
+ * Страница книги. Рисует страницу, состоящую из множества элементов:
+ *  - Строки текста
+ *  - Рамки
+ *  - Другая информация
+ *  
+ * Страница и ее элементы могут иметь различный вид в зависимости от
+ * уровня зума.
+ */
 class ReaderPage extends ReaderGroupWithSize {
 	private ArrayList<ReaderText> lines;
 	private ReaderPage fake;

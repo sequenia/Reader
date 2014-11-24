@@ -6,6 +6,11 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+/*
+ * Объект, рисуемый на холсте.
+ * Имеет позицию и абсолютную позицию относительно родителя и пустой метод рисования.
+ * Если родителя нет, позиция и абсолютная позиция равны.
+ */
 public class ReaderObject {
 	private float x;
 	private float y;
@@ -69,6 +74,12 @@ public class ReaderObject {
 	}
 }
 
+/*
+ * Группа рисуемых элементов.
+ * Представляет собой контейнер с элементами,
+ * каждый из которых будет отрисован во время отрисовки группы.
+ * Дочерние элементы группы позиционируются относительно нее.
+ */
 class ReaderGroup extends ReaderObject {
 	private ArrayList<ReaderObject> children;
 	
@@ -100,6 +111,9 @@ class ReaderGroup extends ReaderObject {
 	}
 }
 
+/*
+ * Рисуемый текст
+ */
 class ReaderText extends ReaderObject {
 	private String text;
 	private Paint paint;
@@ -147,6 +161,9 @@ class ReaderText extends ReaderObject {
 	}
 }
 
+/*
+ * Линия
+ */
 class ReaderLine extends ReaderObject {
 	private Paint paint;
 	private float endX;
@@ -204,6 +221,12 @@ class ReaderLine extends ReaderObject {
 	}
 }
 
+/*
+ * Группа, имеющая размеры.
+ * Главное отличие от обычной группы -
+ * она не будет отрисована, если не попадает в экран.
+ * Так же, имеет рамку.
+ */
 class ReaderGroupWithSize extends ReaderGroup {
 	private float width = 0.0f;
 	private float height = 0.0f;
