@@ -8,6 +8,8 @@ import android.graphics.Paint;
 class ReaderBook extends ReaderGroupWithSize {
 	private ArrayList<ReaderPage> pages;
 	private ArrayList<ReaderPage> pagesToDraw;
+	private ArrayList<ReaderPage> fakePages;
+	private ArrayList<ReaderPage> fakePagesToDraw;
 	private ReaderPage currentPage;
 	
 	private ArrayList<ReaderText> title;
@@ -21,6 +23,7 @@ class ReaderBook extends ReaderGroupWithSize {
 	private Interval pagesInterval;
 	private Interval minInfoInterval;
 	private Interval fullInfoInterval;
+	private Interval fakePagesInterval;
 	
 	private Paint borderPaintWhenPagesShown;
 	
@@ -28,11 +31,14 @@ class ReaderBook extends ReaderGroupWithSize {
 		super(settings.getScreenWidth(), settings.getScreenHeight());
 		pages = new ArrayList<ReaderPage>();
 		pagesToDraw = new ArrayList<ReaderPage>();
+		fakePages = new ArrayList<ReaderPage>();
+		fakePagesToDraw = new ArrayList<ReaderPage>();
 		currentPage = null;
 		
 		pagesInterval = new Interval(0.05f, 100.0f, false, true);
 		fullInfoInterval = new Interval(0.02f, 0.05f, false, true);
 		minInfoInterval = new Interval(0.0001f, 0.02f, false, true);
+		fakePagesInterval = new Interval(1.0f, 100.0f, true, true);
 		
 		title = new ArrayList<ReaderText>();
 		creator = new ArrayList<ReaderText>();
@@ -46,14 +52,15 @@ class ReaderBook extends ReaderGroupWithSize {
 	}
 	
 	public void update(Canvas canvas) {
-		pagesToDraw = findPagesToDraw(canvas);
+		pagesToDraw = findPagesToDraw(canvas, pages);
+		fakePagesToDraw = findPagesToDraw(canvas, fakePages);
 	}
 	
-	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas) {
+	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas, ArrayList<ReaderPage> p) {
 		ArrayList<ReaderPage> toDraw = new ArrayList<ReaderPage>();
 		
-		for(int i = 0; i < pages.size(); i++) {
-			ReaderPage page = pages.get(i);
+		for(int i = 0; i < p.size(); i++) {
+			ReaderPage page = p.get(i);
 			
 			if(page.isInScreen(canvas)) {
 				toDraw.add(page);
@@ -65,20 +72,24 @@ class ReaderBook extends ReaderGroupWithSize {
 	
 	@Override
 	public boolean draw(Canvas canvas, float zoom) {
-			if(minInfoInterval.isIn(zoom)) {
-				drawMinInfo(canvas, zoom);
-				drawBorders(canvas, zoom);
-			}
+		if(minInfoInterval.isIn(zoom)) {
+			drawMinInfo(canvas, zoom);
+			drawBorders(canvas, zoom);
+		}
 
-			if(fullInfoInterval.isIn(zoom)) {
-				drawFullInfo(canvas, zoom);
-				drawBorders(canvas, zoom);
-			}
+		if(fullInfoInterval.isIn(zoom)) {
+			drawFullInfo(canvas, zoom);
+			drawBorders(canvas, zoom);
+		}
 
-			if(pagesInterval.isIn(zoom)) {
-				drawPages(canvas, zoom);
-				drawBordersWhenPagesShown(canvas, zoom);
-			}
+		if(pagesInterval.isIn(zoom)) {
+			drawPages(canvas, zoom);
+			drawBordersWhenPagesShown(canvas, zoom);
+		}
+		
+		if(fakePagesInterval.isIn(zoom)) {
+			drawFakePages(canvas, zoom);
+		}
 		return true;
 	}
 	
@@ -99,6 +110,13 @@ class ReaderBook extends ReaderGroupWithSize {
 	public boolean drawPages(Canvas canvas, float zoom) {
 		for(int i = 0; i < pagesToDraw.size(); i++) {
 			pagesToDraw.get(i).draw(canvas, zoom);
+		}
+		return true;
+	}
+	
+	public boolean drawFakePages(Canvas canvas, float zoom) {
+		for(int i = 0; i < fakePagesToDraw.size(); i++) {
+			fakePagesToDraw.get(i).draw(canvas, zoom);
 		}
 		return true;
 	}
@@ -176,6 +194,14 @@ class ReaderBook extends ReaderGroupWithSize {
 		return pagesToDraw;
 	}
 	
+	public ArrayList<ReaderPage> getFakePages() {
+		return fakePages;
+	}
+	
+	public ArrayList<ReaderPage> getFakePagesToDraw() {
+		return fakePagesToDraw;
+	}
+	
 	public void addPage(ReaderPage page) {
 		int pagesCount = pages.size();
 		if(pagesCount > 0) {
@@ -185,6 +211,11 @@ class ReaderBook extends ReaderGroupWithSize {
 		}
 		
 		pages.add(page);
+		addChild(page);
+	}
+	
+	public void addFakePage(ReaderPage page) {
+		fakePages.add(page);
 		addChild(page);
 	}
 	

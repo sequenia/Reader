@@ -132,6 +132,14 @@ class ReaderText extends ReaderObject {
 		return paint;
 	}
 	
+	public ReaderText clone() {
+		ReaderText copy = new ReaderText(text);
+		copy.setPaint(this.paint);
+		copy.setParent(this.getParent());
+		copy.setPosition(getPositionX(), getPositionY());
+		return copy;
+	}
+	
 	@Override
 	public boolean draw(Canvas canvas, float zoom) {
 		canvas.drawText(text, getAbsoluteX(), getAbsoluteY(), paint);

@@ -150,7 +150,6 @@ public class ReaderSurface extends GestureSurface {
 		ReaderPage page = (ReaderPage)uniformMotion.pointToMove;
 		
 		if(uniformMotion.stoped) {
-			System.out.println("STOPED");
 			currentX = - page.getAbsoluteX();
 			currentY = - page.getAbsoluteY();
 			scaleFactor = 1.0f;
@@ -160,6 +159,7 @@ public class ReaderSurface extends GestureSurface {
 			book.setCurrentPage(page);
 			
 			stopTranslation();
+			translation = new UniformTranslation();
 			mode = ReaderMode.READING;
 		} else {
 			moveCanvas(result.x, result.y);
@@ -228,7 +228,9 @@ public class ReaderSurface extends GestureSurface {
 
 			case READING:
 				dx = x - prevX;
-				((UniformTranslation) translation).d.x += dx;
+				if(translation != null) {
+					((UniformTranslation) translation).d.x += dx;
+				}
 				break;
 				
 			default:
@@ -240,11 +242,10 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void onActionDown(float x, float y, MotionEvent event) {
-		if(mode == ReaderMode.READING) {
-			translation = new UniformTranslation();
-		}
-
 		if(state != ReaderState.MOVING_TO_PAGE) {
+			if(mode == ReaderMode.READING) {
+				translation = new UniformTranslation();
+			}
 			state = ReaderState.NOTHING;
 		}
 	}
@@ -282,7 +283,7 @@ public class ReaderSurface extends GestureSurface {
 						pageToMove = currentPage;
 					}
 					
-					moveToPage(pageToMove);
+					slideToPage(currentPage, pageToMove);
 				} else {
 					state = ReaderState.NOTHING;
 				}
@@ -418,23 +419,47 @@ public class ReaderSurface extends GestureSurface {
 		moveCanvas(dx, dy);
 	}
 	
+	private void slideToPage(ReaderPage from, ReaderPage to) {
+		if(from == to) {
+			moveToPage(to, false);
+		} else {
+			ReaderPage fromFake = from.getFake();
+			ReaderPage toFake = to.getFake();
+			
+			if(fromFake != null && toFake != null) {
+				moveToPage(to, true);
+			} else {
+				moveToPage(to, false);
+			}
+		}
+	}
+	
 	private void moveToNearestPage() {
 		PointF screenCenter = new PointF(settings.halfScreenWidth, settings.halfScreenHeight);
 		PointF screenCenterOnCanvas = screenToCanvasCoord(screenCenter, settings.getScreenWidth(), settings.getScreenHeight());
 		ReaderPage nearestPage = reader.getNearestPage(screenCenterOnCanvas.x, screenCenterOnCanvas.y);
-		moveToPage(nearestPage);
+		moveToPage(nearestPage, false);
 	}
 	
-	private void moveToPage(ReaderPage page) {
+	private void moveToPage(ReaderPage page, boolean toFake) {
 		if(page == null) {
 			state = ReaderState.NOTHING;
 			return; 
 		}
 
-		float pageX = page.getAbsoluteX();
-		float pageY = page.getAbsoluteY();
+		float pageX;
+		float pageY;
 		float pageWidth = page.getWidth();
 		float pageHeight = page.getHeight();
+		
+		ReaderPage fake = page.getFake();
+		if(toFake && fake != null) {
+			pageX = fake.getAbsoluteX();
+			pageY = fake.getAbsoluteY();
+		} else {
+			pageX = page.getAbsoluteX();
+			pageY = page.getAbsoluteY();
+		}
 		
 		// Центр страницы на канвасе
 		float pageCenterX = pageX + pageWidth / 2.0f;

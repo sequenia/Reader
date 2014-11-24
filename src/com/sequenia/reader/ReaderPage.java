@@ -7,7 +7,7 @@ import android.graphics.Paint;
 
 class ReaderPage extends ReaderGroupWithSize {
 	private ArrayList<ReaderText> lines;
-	
+	private ReaderPage fake;
 	private ReaderPage next;
 	private ReaderPage previous;
 	
@@ -28,6 +28,7 @@ class ReaderPage extends ReaderGroupWithSize {
 		lines = new ArrayList<ReaderText>();
 		next = null;
 		previous = null;
+		fake = null;
 		
 		bgInterval = new Interval(0.05f, 0.25f, false, true);
 		textInterval = new Interval(0.1f, 100.0f, false, true);
@@ -42,22 +43,18 @@ class ReaderPage extends ReaderGroupWithSize {
 	
 	@Override
 	public boolean draw(Canvas canvas, float zoom) {
-		boolean inScreen = super.draw(canvas, zoom);
-		
-		if(inScreen) {
-			if(bgInterval.isIn(zoom)) {
-				drawBackground(canvas, zoom);
-				drawBorders(canvas, zoom);
-			} else {
-				drawBorders(canvas, zoom, true);
-			}
-
-			if(textInterval.isIn(zoom)) {
-				drawText(canvas, zoom);
-			}
+		if(bgInterval.isIn(zoom)) {
+			drawBackground(canvas, zoom);
+			drawBorders(canvas, zoom);
+		} else {
+			drawBorders(canvas, zoom, true);
 		}
 
-		return inScreen;
+		if(textInterval.isIn(zoom)) {
+			drawText(canvas, zoom);
+		}
+
+		return true;
 	}
 	
 	public boolean drawBorders(Canvas canvas, float zoom, boolean reactToCurrent) {
@@ -99,6 +96,24 @@ class ReaderPage extends ReaderGroupWithSize {
 		addChild(line);
 	}
 	
+	public ReaderPage createFake(ReaderSettings settings, float positionX, float positionY) {
+		ReaderPage copy = new ReaderPage(getWidth(), getHeight(), settings);
+		
+		copy.setParent(getParent());
+		copy.setPosition(positionX, positionY);
+		
+		for(int i = 0; i < lines.size(); i++) {
+			copy.addLine(lines.get(i).clone());
+		}
+		
+		copy.setNext(next);
+		copy.setPrevious(previous);
+		
+		this.setFake(copy);
+		
+		return copy;
+	}
+	
 	public void setIsRead(boolean _isRead) {
 		isRead = _isRead;
 	}
@@ -129,5 +144,13 @@ class ReaderPage extends ReaderGroupWithSize {
 	
 	public ReaderPage getPrevious() {
 		return previous;
+	}
+	
+	public void setFake(ReaderPage page) {
+		fake = page;
+	}
+	
+	public ReaderPage getFake() {
+		return fake;
 	}
 }

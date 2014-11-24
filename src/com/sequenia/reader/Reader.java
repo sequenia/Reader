@@ -31,6 +31,9 @@ public class Reader {
 		float newBookX = 0.0f;
 		float newBookY = 0.0f;
 		
+		float pageWidth = settings.getScreenWidth();
+		float pageHeight = settings.getScreenHeight();
+		
 		for(int b = 0; b < booksCount; b++) {
 			Book book = new Book();
 			book.titles.add("Колобок.");
@@ -49,9 +52,12 @@ public class Reader {
 			int pagesCount = (b + 1) * 100;
 			int pagesPerLine = (int) Math.ceil(Math.sqrt(pagesCount));
 			for(int i = 0; i < pagesCount; i++) {
-				ReaderPage page = new ReaderPage(settings.getScreenWidth(), settings.getScreenHeight(), settings);
+				ReaderPage page = new ReaderPage(pageWidth, pageHeight, settings);
 				
-				page.setPosition((float)(i % pagesPerLine) * settings.getScreenWidth(), (float)(i / pagesPerLine) * settings.getScreenHeight());
+				float pageX = (float)(i % pagesPerLine) * settings.getScreenWidth();
+				float pageY = (float)(i / pagesPerLine) * settings.getScreenHeight();
+				
+				page.setPosition(pageX, pageY);
 				if(i < 74) {
 					page.setIsRead(true);
 				}
@@ -67,6 +73,16 @@ public class Reader {
 				}
 				
 				readerBook.addPage(page);
+				
+				if(i % pagesPerLine == 0 && i != 0) {
+					ReaderPage fake = page.createFake(settings, pageWidth * pagesPerLine, pageY - pageHeight);
+					readerBook.addFakePage(fake);
+				}
+				
+				if(i % pagesPerLine == pagesPerLine - 1 && i != pagesCount - 1) {
+					ReaderPage fake = page.createFake(settings, - pageWidth, pageY + pageHeight);
+					readerBook.addFakePage(fake);
+				}
 			}
 			
 			float width = pagesPerLine * settings.getScreenWidth();
@@ -80,7 +96,7 @@ public class Reader {
 				this.setCurrentBook(readerBook);
 			}
 			
-			newBookX = newBookX + width + 150.0f;
+			newBookX = newBookX + width + pageWidth;
 		}
 	}
 	
