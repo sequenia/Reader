@@ -49,6 +49,7 @@ public class ReaderSettings {
 	float accelScaleSensivity = 1.5f;
 	float toReadModeSensivity = 0.6f;
 	float toReadTime = 0.2f;
+	float pageSlideSensivity = 0.2f;
 	
 	float maxScaleVelocity = 30.0f;
 	float minScaleVelocity = 1.0f / maxScaleVelocity;

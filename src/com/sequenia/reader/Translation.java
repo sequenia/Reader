@@ -148,23 +148,24 @@ class UniformMotion extends Translation {
 		sy += dy;
 		
 		if(needs != null) {
-			boolean translationEnded = false;
+			boolean translationEndedX = false;
+			boolean translationEndedY = false;
 			boolean scalingEnded = false;
 			
 			if(needs.x < 0.0f && sx < needs.x) {
-				translationEnded = true;
+				translationEndedX = true;
 			}
 			
 			if(needs.x >= 0.0f && sx >= needs.x) {
-				translationEnded = true;
+				translationEndedX = true;
 			}
 			
 			if(needs.y < 0.0f && sy < needs.y) {
-				translationEnded = true;
+				translationEndedY = true;
 			}
 			
 			if(needs.y >= 0.0f && sy >= needs.y) {
-				translationEnded = true;
+				translationEndedY = true;
 			}
 			
 			if(needs.s < 1.0f && ss < needs.s) {
@@ -175,7 +176,7 @@ class UniformMotion extends Translation {
 				scalingEnded = true;
 			}
 			
-			if(translationEnded && scalingEnded) {
+			if(translationEndedX && translationEndedY && scalingEnded) {
 				stoped = true;
 			}
 		}

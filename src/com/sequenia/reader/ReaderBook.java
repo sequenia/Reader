@@ -177,6 +177,13 @@ class ReaderBook extends ReaderGroupWithSize {
 	}
 	
 	public void addPage(ReaderPage page) {
+		int pagesCount = pages.size();
+		if(pagesCount > 0) {
+			ReaderPage lastPage = pages.get(pagesCount - 1);
+			lastPage.setNext(page);
+			page.setPrevious(lastPage);
+		}
+		
 		pages.add(page);
 		addChild(page);
 	}

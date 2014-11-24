@@ -8,6 +8,9 @@ import android.graphics.Paint;
 class ReaderPage extends ReaderGroupWithSize {
 	private ArrayList<ReaderText> lines;
 	
+	private ReaderPage next;
+	private ReaderPage previous;
+	
 	private Paint bgPaint;
 	private Paint readBgPaint;
 	private Paint currentBgPaint;
@@ -21,10 +24,16 @@ class ReaderPage extends ReaderGroupWithSize {
 	
 	public ReaderPage(float _width, float _height, ReaderSettings settings) {
 		super(_width, _height);
+
 		lines = new ArrayList<ReaderText>();
+		next = null;
+		previous = null;
+		
 		bgInterval = new Interval(0.05f, 0.25f, false, true);
 		textInterval = new Interval(0.1f, 100.0f, false, true);
+		
 		createBorders(settings.pageBorderPaint);
+
 		bgPaint = settings.pageBgPaint;
 		currentBgPaint = settings.currentPageBgPaint;
 		readBgPaint = settings.readPageBgPaint;
@@ -104,5 +113,21 @@ class ReaderPage extends ReaderGroupWithSize {
 	
 	public boolean getIsCurrent() {
 		return isCurrent;
+	}
+	
+	public void setNext(ReaderPage page) {
+		next = page;
+	}
+	
+	public ReaderPage getNext() {
+		return next;
+	}
+	
+	public void setPrevious(ReaderPage page) {
+		previous = page;
+	}
+	
+	public ReaderPage getPrevious() {
+		return previous;
 	}
 }

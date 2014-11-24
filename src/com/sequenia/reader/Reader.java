@@ -6,13 +6,15 @@ import android.graphics.Canvas;
 public class Reader {
 	private ReaderSettings settings;
 	private ArrayList<ReaderBook> books;
-	
 	private ArrayList<ReaderBook> booksToDraw;
+	
+	private ReaderBook currentBook;
 	
 	public Reader() {
 		settings = new ReaderSettings();
 		books = new ArrayList<ReaderBook>();
 		booksToDraw = new ArrayList<ReaderBook>();
+		currentBook = null;
 		initObjects();
 	}
 	
@@ -20,6 +22,7 @@ public class Reader {
 		settings = _settings;
 		books = new ArrayList<ReaderBook>();
 		booksToDraw = new ArrayList<ReaderBook>();
+		currentBook = null;
 		initObjects();
 	}
 	
@@ -72,6 +75,10 @@ public class Reader {
 			readerBook.setHeight(height);
 			readerBook.createBorders(settings.bookBorderPaint);
 			books.add(readerBook);
+			
+			if(b == 0) {
+				this.setCurrentBook(readerBook);
+			}
 			
 			newBookX = newBookX + width + 150.0f;
 		}
@@ -130,5 +137,13 @@ public class Reader {
 		}
 		
 		return nearestPage;
+	}
+	
+	public void setCurrentBook(ReaderBook book) {
+		currentBook = book;
+	}
+	
+	public ReaderBook getCurrentBook() {
+		return currentBook;
 	}
 }

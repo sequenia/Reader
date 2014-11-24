@@ -15,7 +15,8 @@ import android.view.Window;
 
 public class ReaderSurface extends GestureSurface {
 	public static enum ReaderState {
-		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING, TO_READ_CORRECTION, WAITING_FOR_TO_READ_CORRECTION
+		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING,
+		MOVING_TO_PAGE, WAITING_FOR_TO_READ_CORRECTION
 	}
 	public static enum ReaderMode {
 		OVERVIEW, READING
@@ -90,17 +91,6 @@ public class ReaderSurface extends GestureSurface {
 		}
 	}
 	
-	private void postUpdate(float time) {
-		switch(state) {
-		case WAITING_FOR_TO_READ_CORRECTION:
-			moveToNearestPage();
-			break;
-
-		default:
-			break;
-		}
-	}
-	
 	private void overviewUpdate(float time) {
 		switch (state) {
 		case ACCEL_TRANSLATION:
@@ -133,26 +123,8 @@ public class ReaderSurface extends GestureSurface {
 			}
 			break;
 			
-		case TO_READ_CORRECTION:
-			UniformMotion uniformMotion = (UniformMotion) translation;
-			UniformMotionResult result = uniformMotion.move(time);
-			
-			ReaderPage page = (ReaderPage)uniformMotion.pointToMove;
-			
-			if(uniformMotion.stoped) {
-				currentX = - page.getAbsoluteX();
-				currentY = - page.getAbsoluteY();
-				scaleFactor = 1.0f;
-				
-				ReaderBook book = (ReaderBook) page.getParent();
-				book.setCurrentPage(page);
-				
-				stopTranslation();
-				mode = ReaderMode.READING;
-			} else {
-				moveCanvas(result.x, result.y);
-				scaleCanvas(result.s, new PointF(settings.halfScreenWidth, settings.halfScreenHeight));
-			}
+		case MOVING_TO_PAGE:
+			movingToPage(time);
 			break;
 			
 		default:
@@ -161,7 +133,49 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void readingUpdate(float time) {
+		switch (state) {
+		case MOVING_TO_PAGE:
+			movingToPage(time);
+			break;
+			
+		default:
+			break;
+		}
+	}
+	
+	private void movingToPage(float time) {
+		UniformMotion uniformMotion = (UniformMotion) translation;
+		UniformMotionResult result = uniformMotion.move(time);
 		
+		ReaderPage page = (ReaderPage)uniformMotion.pointToMove;
+		
+		if(uniformMotion.stoped) {
+			System.out.println("STOPED");
+			currentX = - page.getAbsoluteX();
+			currentY = - page.getAbsoluteY();
+			scaleFactor = 1.0f;
+			
+			ReaderBook book = (ReaderBook) page.getParent();
+			reader.setCurrentBook(book);
+			book.setCurrentPage(page);
+			
+			stopTranslation();
+			mode = ReaderMode.READING;
+		} else {
+			moveCanvas(result.x, result.y);
+			scaleCanvas(result.s, new PointF(settings.halfScreenWidth, settings.halfScreenHeight));
+		}
+	}
+	
+	private void postUpdate(float time) {
+		switch(state) {
+		case WAITING_FOR_TO_READ_CORRECTION:
+			moveToNearestPage();
+			break;
+
+		default:
+			break;
+		}
 	}
 	
 	private void updatePaints() {
@@ -214,6 +228,7 @@ public class ReaderSurface extends GestureSurface {
 
 			case READING:
 				dx = x - prevX;
+				((UniformTranslation) translation).d.x += dx;
 				break;
 				
 			default:
@@ -225,7 +240,11 @@ public class ReaderSurface extends GestureSurface {
 	}
 	
 	private void onActionDown(float x, float y, MotionEvent event) {
-		if(state != ReaderState.TO_READ_CORRECTION) {
+		if(mode == ReaderMode.READING) {
+			translation = new UniformTranslation();
+		}
+
+		if(state != ReaderState.MOVING_TO_PAGE) {
 			state = ReaderState.NOTHING;
 		}
 	}
@@ -242,7 +261,31 @@ public class ReaderSurface extends GestureSurface {
 				break;
 
 			case READING:
-				state = ReaderState.NOTHING;
+				if(translation != null) {
+					UniformTranslation uniformTranslation = (UniformTranslation) translation;
+					float distance = uniformTranslation.d.x;
+					float slideDistance = settings.pageSlideSensivity * settings.getScreenWidth();
+					
+					ReaderBook currentBook = reader.getCurrentBook();
+					ReaderPage currentPage = currentBook.getCurrentPage();
+					ReaderPage pageToMove = null;
+					
+					if(distance < - slideDistance || distance > slideDistance) {
+						if(distance > 0) {
+							pageToMove = currentPage.getPrevious();
+						} else {
+							pageToMove = currentPage.getNext();
+						}
+					}
+					
+					if(pageToMove == null) {
+						pageToMove = currentPage;
+					}
+					
+					moveToPage(pageToMove);
+				} else {
+					state = ReaderState.NOTHING;
+				}
 				break;
 				
 			default:
@@ -412,7 +455,7 @@ public class ReaderSurface extends GestureSurface {
 		translation = new UniformMotion(xV, yV, scaleV);
 		((UniformMotion) translation).needs = new UniformMotionResult(distanceX, distanceY, distanceScale);
 		((UniformMotion) translation).pointToMove = page;
-		state = ReaderState.TO_READ_CORRECTION;
+		state = ReaderState.MOVING_TO_PAGE;
 	}
 	
 	private PointF screenToCanvasCoord(PointF screenCoord, float screenWidth, float screenHeight) {
