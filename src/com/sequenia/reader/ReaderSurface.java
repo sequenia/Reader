@@ -429,15 +429,15 @@ public class ReaderSurface extends GestureSurface {
 	
 	private void slideToPage(ReaderPage from, ReaderPage to) {
 		if(from == to) {
-			moveToPage(to, false);
+			moveToPage(to, settings.pageSlideTime, false);
 		} else {
 			ReaderPage fromFake = from.getFake();
 			ReaderPage toFake = to.getFake();
 			
 			if(fromFake != null && toFake != null) {
-				moveToPage(to, true);
+				moveToPage(to, settings.pageSlideTime, true);
 			} else {
-				moveToPage(to, false);
+				moveToPage(to, settings.pageSlideTime, false);
 			}
 		}
 	}
@@ -446,10 +446,20 @@ public class ReaderSurface extends GestureSurface {
 		PointF screenCenter = new PointF(settings.halfScreenWidth, settings.halfScreenHeight);
 		PointF screenCenterOnCanvas = screenToCanvasCoord(screenCenter, settings.getScreenWidth(), settings.getScreenHeight());
 		ReaderPage nearestPage = reader.getNearestPage(screenCenterOnCanvas.x, screenCenterOnCanvas.y);
-		moveToPage(nearestPage, false);
+		moveToPage(nearestPage, settings.toReadTime, false);
 	}
 	
-	private void moveToPage(ReaderPage page, boolean toFake) {
+	public void moveToCurrentPage() {
+		state = ReaderState.NOTHING;
+		mode = ReaderMode.READING;
+		translation = new UniformTranslation();
+		ReaderPage page = reader.getCurrentBook().getCurrentPage();
+		currentX = - page.getAbsoluteX();
+		currentY = - page.getAbsoluteY();
+		scaleFactor = 1.0f;
+	}
+	
+	private void moveToPage(ReaderPage page, float time, boolean toFake) {
 		if(page == null) {
 			state = ReaderState.NOTHING;
 			return; 
@@ -481,9 +491,9 @@ public class ReaderSurface extends GestureSurface {
 		float distanceY = settings.halfScreenHeight - sreenPageCenter.y;
 		float distanceScale = 1.0f / scaleFactor;
 		
-		float xV = distanceX / settings.toReadTime;
-		float yV = distanceY / settings.toReadTime;
-		float scaleV = (float) Math.pow(distanceScale, 1.0f / settings.toReadTime);
+		float xV = distanceX / time;
+		float yV = distanceY / time;
+		float scaleV = (float) Math.pow(distanceScale, 1.0f / time);
 		
 		translation = new UniformMotion(xV, yV, scaleV);
 		((UniformMotion) translation).needs = new UniformMotionResult(distanceX, distanceY, distanceScale);

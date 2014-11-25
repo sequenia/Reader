@@ -98,6 +98,10 @@ class UniformMotion extends Translation {
 	public float sy;
 	public float ss;
 	
+	boolean translationEndedX = false;
+	boolean translationEndedY = false;
+	boolean scalingEnded = false;
+	
 	UniformMotionResult needs;          // Путь, который нужно пройти в результате движения
 	Object pointToMove;                 // Точка, в которой нужно оказаться в рузельтате движения
 	
@@ -148,32 +152,34 @@ class UniformMotion extends Translation {
 		sy += dy;
 		
 		if(needs != null) {
-			boolean translationEndedX = false;
-			boolean translationEndedY = false;
-			boolean scalingEnded = false;
-			
 			if(needs.x < 0.0f && sx < needs.x) {
 				translationEndedX = true;
+				dxRes = 0.0f;
 			}
 			
 			if(needs.x >= 0.0f && sx >= needs.x) {
 				translationEndedX = true;
+				dxRes = 0.0f;
 			}
 			
 			if(needs.y < 0.0f && sy < needs.y) {
 				translationEndedY = true;
+				dyRes = 0.0f;
 			}
 			
 			if(needs.y >= 0.0f && sy >= needs.y) {
 				translationEndedY = true;
+				dyRes = 0.0f;
 			}
 			
 			if(needs.s < 1.0f && ss < needs.s) {
 				scalingEnded = true;
+				ds = 1.0f;
 			}
 			
 			if(needs.s >= 1.0f && ss >= needs.s) {
 				scalingEnded = true;
+				ds = 1.0f;
 			}
 			
 			if(translationEndedX && translationEndedY && scalingEnded) {

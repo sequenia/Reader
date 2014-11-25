@@ -1,6 +1,7 @@
 package com.sequenia.reader;
 
 import android.support.v7.app.ActionBarActivity;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,6 +12,8 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		
 		surface = new ReaderSurface(this);
 		
@@ -38,7 +41,13 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
+		
+		switch (id) {
+		case R.id.action_to_current_page:
+			surface.moveToCurrentPage();
+			return true;
+
+		case R.id.action_add_to_library:
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
