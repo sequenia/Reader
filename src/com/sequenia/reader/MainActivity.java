@@ -1,6 +1,7 @@
 package com.sequenia.reader;
 
 import android.support.v7.app.ActionBarActivity;
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
@@ -48,6 +49,16 @@ public class MainActivity extends ActionBarActivity {
 			return true;
 
 		case R.id.action_add_to_library:
+			final Context context = this;
+			OpenFileDialog fileDialog = new OpenFileDialog(this)
+			.setFilter(".*\\.epub")
+			.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
+				@Override
+				public void OnSelectedFile(String fileName) {
+					new LibraryManager().addToLibrary(context, fileName, surface.settings);
+				}
+			});
+			fileDialog.show();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
