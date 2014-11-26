@@ -55,7 +55,7 @@ public class Reader {
 			readerBook.setCreator(book.creators, settings);
 			readerBook.setYear(book.dates, settings);
 
-			int pagesCount = (b + 1) * 100;
+			int pagesCount = (b + 1) * 500;
 			int pagesPerLine = (int) Math.ceil(Math.sqrt(pagesCount));
 			for(int i = 0; i < pagesCount; i++) {
 				ReaderPage page = new ReaderPage(pageWidth, pageHeight, settings);
@@ -71,9 +71,9 @@ public class Reader {
 					readerBook.setCurrentPage(page);
 				}
 				
-				for(int j = 0; j < 10; j++) {
-					ReaderText text = new ReaderText("Привет! Как дела!?");
-					text.setPosition(10.0f, j * 50.0f + 50.0f);
+				for(int j = 0; j < 20; j++) {
+					ReaderText text = new ReaderText("Привет! Как дела!? У меня норм!");
+					text.setPosition(settings.pagePadding, j * (settings.textSize + 2.0f * settings.linesMargin) + settings.pagePadding + settings.textSize);
 					text.setPaint(settings.textPaint);
 					page.addLine(text);
 				}
@@ -167,5 +167,13 @@ public class Reader {
 	
 	public ReaderBook getCurrentBook() {
 		return currentBook;
+	}
+	
+	public ArrayList<ReaderBook> getBooks() {
+		return books;
+	}
+	
+	public void addBook(ReaderBook book) {
+		books.add(book);
 	}
 }

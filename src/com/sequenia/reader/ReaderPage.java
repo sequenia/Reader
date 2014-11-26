@@ -40,7 +40,7 @@ class ReaderPage extends ReaderGroupWithSize {
 		fake = null;
 		
 		bgInterval = new Interval(0.05f, 0.25f, false, true);
-		textInterval = new Interval(0.1f, 100.0f, false, true);
+		textInterval = new Interval(0.2f, 100.0f, false, true);
 		
 		createBorders(settings.pageBorderPaint);
 

@@ -22,7 +22,7 @@ import org.xml.sax.SAXException;
 
 import com.sequenia.reader.Book.BookPage;
 import com.sequenia.reader.Book.PageElem;
-import com.sequenia.reader.Book.TextElem;
+import com.sequenia.reader.Book.PageText;
 
 public class BookParser {
 	private String filename;
@@ -129,7 +129,7 @@ class EpubParser extends BookParser {
 		String text = body.getTextContent();
 		
 		BookPage page = new BookPage();
-		PageElem pageText = new TextElem(text);
+		PageElem pageText = new PageText(text);
 		page.elements.add(pageText);
 		book.pages.add(page);
 		

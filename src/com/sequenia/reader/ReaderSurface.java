@@ -43,7 +43,7 @@ public class ReaderSurface extends GestureSurface {
 	float scaleVelocity = 1.0f;
 	private int mActivePointerId = 0;
 	
-	ReaderSettings settings;
+	private ReaderSettings settings;
 
 	public ReaderSurface(Context _context) {
 		super(_context);
@@ -524,5 +524,13 @@ public class ReaderSurface extends GestureSurface {
 	private void stopTranslation() {
 		state = ReaderState.NOTHING;
 		translation = null;
+	}
+	
+	public Reader getReader() {
+		return reader;
+	}
+	
+	public ReaderSettings getSettings() {
+		return settings;
 	}
 }

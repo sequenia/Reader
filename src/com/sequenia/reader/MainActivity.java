@@ -54,7 +54,7 @@ public class MainActivity extends ActionBarActivity {
 			.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
 				@Override
 				public void OnSelectedFile(String fileName) {
-					new LibraryManager().addToLibrary(context, fileName, surface.settings);
+					new LibraryManager().addToLibrary(context, fileName, surface);
 				}
 			});
 			fileDialog.show();

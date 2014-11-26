@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * поэтому для их хранения используются списки.
  */
 public class Book {
-	public enum ElemType {
+	public static enum ElemType {
 		Text, Image
 	}
 	
@@ -40,14 +40,14 @@ public class Book {
 		}
 	}
 	
-	public static class TextElem extends PageElem {
+	public static class PageText extends PageElem {
 		String text;
 		
-		public TextElem() {
+		public PageText() {
 			type = ElemType.Text;
 		}
 		
-		public TextElem(String _text) {
+		public PageText(String _text) {
 			type = ElemType.Text;
 			text = _text;
 		}
