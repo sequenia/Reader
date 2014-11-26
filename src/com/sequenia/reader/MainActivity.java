@@ -30,7 +30,6 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		surface.runDrawThread();
 	}
 	
 	@Override

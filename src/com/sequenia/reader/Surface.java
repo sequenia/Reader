@@ -81,14 +81,13 @@ public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 	}
 	
 	/*
-	 * Запуск поток рисования
-	 * ВНИМАНИЕ - Для корректной работы этот метод следует вызывать в onResume у Activity
+	 * Запуск потока рисования
 	 */
 	public void runDrawThread() {
 		if(drawThread == null && created == true) {
 			drawThread = new DrawThread(getHolder());
-	        drawThread.setRunning(true);
-	        drawThread.start();
+			drawThread.setRunning(true);
+			drawThread.start();
 		}
 	}
 

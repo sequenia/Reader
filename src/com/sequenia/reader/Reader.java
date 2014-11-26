@@ -33,7 +33,7 @@ public class Reader {
 	}
 	
 	public void initObjects() {
-		int booksCount = 5;
+		int booksCount = 2;
 		float newBookX = 0.0f;
 		float newBookY = 0.0f;
 		
