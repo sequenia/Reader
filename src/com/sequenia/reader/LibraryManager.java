@@ -62,7 +62,9 @@ public class LibraryManager {
 				readerBookY = lastBook.getAbsoluteY();
 			}
 			
-			ReaderBook readerBook = ReaderBookCreator.createReaderBook(book, settings, readerBookX, readerBookY);
+			pd.setIndeterminate(false);
+			
+			ReaderBook readerBook = ReaderBookCreator.createReaderBook(book, settings, readerBookX, readerBookY, this);
 			reader.addBook(readerBook);
 			return null;
 		}
@@ -77,6 +79,10 @@ public class LibraryManager {
 		protected void onProgressUpdate(Integer... values) {
 			pd.incrementProgressBy(values[0] - pd.getProgress());
 			super.onProgressUpdate(values);
+		}
+		
+		public void publish(int value) {
+			publishProgress(value);
 		}
 	}
 }

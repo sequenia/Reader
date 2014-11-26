@@ -3,20 +3,20 @@ package com.sequenia.reader;
 import java.util.ArrayList;
 
 import android.graphics.Paint;
-import android.graphics.Rect;
 
 import com.sequenia.reader.Book.BookPage;
 import com.sequenia.reader.Book.PageElem;
 import com.sequenia.reader.Book.PageText;
+import com.sequenia.reader.LibraryManager.AddToLibraryTask;
 
 public class ReaderBookCreator {
-	public static ReaderBook createReaderBook(Book book, ReaderSettings settings, float x, float y) {
+	public static ReaderBook createReaderBook(Book book, ReaderSettings settings, float x, float y, AddToLibraryTask task) {
 		ReaderBook readerBook = new ReaderBook(settings);
 
 		readerBook.setPosition(x, y);
 		setBookInfo(readerBook, book, settings);
 
-		ArrayList<ReaderPage> pages = createPages(book, settings);
+		ArrayList<ReaderPage> pages = createPages(book, settings, task);
 		addPagesToReaderBook(readerBook, pages, settings);
 
 		readerBook.createBorders(settings.bookBorderPaint);
@@ -30,7 +30,7 @@ public class ReaderBookCreator {
 		readerBook.setYear(book.dates, settings);
 	}
 	
-	private static ArrayList<ReaderPage> createPages(Book book, ReaderSettings settings) {
+	private static ArrayList<ReaderPage> createPages(Book book, ReaderSettings settings, AddToLibraryTask task) {
 		ArrayList<ReaderPage> readerPages = new ArrayList<ReaderPage>();
 		
 		float pageWidth = settings.getScreenWidth();
@@ -41,8 +41,9 @@ public class ReaderBookCreator {
 		float doubleLinesMargin = settings.linesMargin * 2.0f;
 		float currentContentHeight;
 
-		for(int i = 0; i < book.pages.size(); i++) {
-			System.out.println(i);
+		
+		int pagesCount = book.pages.size();
+		for(int i = 0; i < pagesCount; i++) {
 			ReaderPage readerPage = new ReaderPage(pageWidth, pageHeight, settings);
 			BookPage page = book.pages.get(i);
 			currentContentHeight = 0.0f;
@@ -74,6 +75,10 @@ public class ReaderBookCreator {
 				default:
 					break;
 				}
+			}
+			
+			if(i % 20 == 0) {
+				task.publish(100 * i / pagesCount);
 			}
 			
 			readerPages.add(readerPage);

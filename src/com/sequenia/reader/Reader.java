@@ -55,7 +55,7 @@ public class Reader {
 			readerBook.setCreator(book.creators, settings);
 			readerBook.setYear(book.dates, settings);
 
-			int pagesCount = (b + 1) * 500;
+			int pagesCount = (b + 1) * 10;
 			int pagesPerLine = (int) Math.ceil(Math.sqrt(pagesCount));
 			for(int i = 0; i < pagesCount; i++) {
 				ReaderPage page = new ReaderPage(pageWidth, pageHeight, settings);
@@ -71,7 +71,7 @@ public class Reader {
 					readerBook.setCurrentPage(page);
 				}
 				
-				for(int j = 0; j < 20; j++) {
+				for(int j = 0; j < 15; j++) {
 					ReaderText text = new ReaderText("Привет! Как дела!? У меня норм!");
 					text.setPosition(settings.pagePadding, j * (settings.textSize + 2.0f * settings.linesMargin) + settings.pagePadding + settings.textSize);
 					text.setPaint(settings.textPaint);

@@ -9,7 +9,7 @@ public class ReaderSettings {
 	
 	Paint textPaint;
 	private int textColor = Color.BLACK;
-	float textSize = 30.0f;
+	float textSize = 25.0f;
 	float pagePadding = 10.0f;
 	float linesMargin = 5.0f;
 	
