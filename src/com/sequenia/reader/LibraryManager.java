@@ -6,6 +6,16 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 
+/*
+ * Используется для добавления книги в библиотеку (Вывода ее на экран).
+ * 
+ * Добавление книги в библиотеку состоит из следующих действий
+ * 1: Приведение электронной книги к общему формату
+ * 2: Преобразование книги из общего формата к формату вывода на экран
+ * 
+ * Добавление в библиотеку - долгий процесс.
+ * Он проходит в отдельном потоке и сопровождается выводом на экран полосы прогресса.
+ */
 public class LibraryManager {
 	private ProgressDialog pd;
 	
@@ -49,6 +59,7 @@ public class LibraryManager {
 	
 		@Override
 		protected Void doInBackground(String... params) {
+			// Приведение книги к общему виду
 			Book book = BookParser.construct(filename).parse();
 			
 			if(book == null) {
@@ -56,6 +67,7 @@ public class LibraryManager {
 				return null;
 			}
 
+			// Поиск позиции для новой книги
 			float readerBookX = 0.0f;
 			float readerBookY = 0.0f;
 
@@ -69,6 +81,7 @@ public class LibraryManager {
 			
 			pd.setIndeterminate(false);
 			
+			// Создание книги, отображаемой на экране
 			ReaderBook readerBook = ReaderBookCreator.createReaderBook(book, settings, readerBookX, readerBookY, this);
 			reader.addBook(readerBook);
 			return null;

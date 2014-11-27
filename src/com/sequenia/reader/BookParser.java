@@ -24,6 +24,10 @@ import com.sequenia.reader.Book.BookPage;
 import com.sequenia.reader.Book.PageElem;
 import com.sequenia.reader.Book.PageText;
 
+/*
+ * Парсер электронных книг.
+ * Используется для приведения электронной книги к общему формату, описанному в классе Book.
+ */
 public class BookParser {
 	private String filename;
 	
@@ -44,6 +48,7 @@ public class BookParser {
 		return parser;
 	}
 	
+	// Должен возвращать книгу в формате класса Book
 	public Book parse() {
 		return null;
 	}
@@ -61,6 +66,16 @@ public class BookParser {
 	}
 }
 
+/*
+ * Парсер книжек формата epub.
+ * 
+ * Книга в формате epub представляет собой набор html файлов,
+ * упакованных в zip архив.
+ * 
+ * Путь к файлу, содержащему структуру книги (Корневой файл) находится в файле "META-INF/container.xml" (EpubInfo.containerFileName).
+ * Ресурсы, используемые в книжке, перечислены в элементе Manifest корневого файла.
+ * Порядок чтения ресурсов указан в элементе Spine корневого файла.
+ */
 class EpubParser extends BookParser {
 
 	public EpubParser(String _filename) {
@@ -113,7 +128,7 @@ class EpubParser extends BookParser {
 		
 		return true;
 	}
-	
+
 	private boolean parseSpineFile(org.w3c.dom.Document file, Book book) {
 		if(file == null || book == null) {
 			System.out.println("ОШИБКА: parseSpineFile - xml or book is null");
@@ -136,7 +151,7 @@ class EpubParser extends BookParser {
 		
 		return true;
 	}
-	
+
 	private TreeNode<ByteArrayOutputStream> findNode(ManifestItem manifestItem, FilesTree files, String rootPath) {
 		String filename = manifestItem.href;
 		TreeNode<ByteArrayOutputStream> node = files.findNode(filename);

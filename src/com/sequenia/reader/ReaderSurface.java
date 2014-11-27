@@ -22,18 +22,27 @@ import android.view.Window;
  * - и т.д.
  */
 public class ReaderSurface extends GestureSurface {
+	/*
+	 * Возможные состояния читалки.
+	 * В зависимости от текущего состояния при обновлении производятся различные действия, например:
+	 * MOVING_TO_PAGE - сейчас камера двигается к странице. Нужно продвинуть камеру на некоторое расстояние
+	 * ACCEL_SCALING - сейчас происходит масштабирование с ускорением. Нужно поменять масштаб
+	 */
 	public static enum ReaderState {
 		NOTHING, TRANSLATION, SCALING, ACCEL_TRANSLATION, ACCEL_SCALING,
 		MOVING_TO_PAGE, WAITING_FOR_TO_READ_CORRECTION
 	}
+	
+	// Возможные режимы читалки.
 	public static enum ReaderMode {
 		OVERVIEW, READING
 	}
-	Translation translation;   // Занимается расчетом пройденного расстояния и масштаба при перемещении
-	ReaderMode mode;           // Текущий режим - чтение, обзор и т.п.
 
-	private ReaderState state; // Текущее состояние - движение, движение с ускорением, движение к странице и т.д.
-	private Reader reader;
+	Translation translation;   // Занимается расчетом пройденного расстояния и масштаба при перемещении
+	ReaderMode mode;           // Текущий режим
+
+	private ReaderState state; // Текущее состояние
+	private Reader reader;     // Читалка
 	
 	float currentX = 0.0f;
 	float currentY = 0.0f;
@@ -67,6 +76,22 @@ public class ReaderSurface extends GestureSurface {
 		super.surfaceCreated(arg0);
 	}
 	
+	/*
+	 * Рисование подразделяется на несколько этапов:
+	 *   Первый проход обновления
+	 *   Задание холсту текущих настроек
+	 *   Обновление читалки
+	 *   Второй проход обновления
+	 *   Рисование
+	 *   
+	 *   Первый проход обновления необходим для рассчета текущих показателей холста: позиция и масштаб.
+	 *   
+	 *   Обновление читалки происходит после задания холсту текущих показателей,
+	 *   так как его главной задачей является поиск книг и страниц, попадающих в область экрана.
+	 *   
+	 *   Во втором проходе выполняются действия, для которых необходимо знать,
+	 *   какие книги и страницы находятся в области экрана.
+	 */
 	@Override
 	public void draw(Canvas canvas, long delta) {
 		float time = (float) delta / 1000.0f;
@@ -79,11 +104,16 @@ public class ReaderSurface extends GestureSurface {
 		reader.draw(canvas, delta, scaleFactor);
 	}
 	
+	// Обновляет матрицу холста (Перемещение и масштабирование холста в зависимости от текущих настроек)
 	private void updateCanvasMatrix(Canvas canvas) {
 		canvas.translate(currentX, currentY);
 		canvas.scale(scaleFactor, scaleFactor);
 	}
 	
+	/*
+	 * Обновление текущих показателей в зависимости от состояния и режима.
+	 * Здесь приемущественно обновляются положение канваса и его масштаб.
+	 */
 	private void update(float time) {
 		updatePaints();
 		

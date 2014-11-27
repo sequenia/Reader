@@ -1,5 +1,9 @@
 package com.sequenia.reader;
 
+/*
+ * Используется для задания интервала.
+ * Умеет определять, находится ли точка в заданном интервале.
+ */
 public class Interval {
 	public float left = 0.0f;
 	public float right = 0.0f;

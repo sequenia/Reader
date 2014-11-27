@@ -11,7 +11,6 @@ import android.graphics.Rect;
 /*
  * Книга читалки. Представляет собой книгу, рисуемую на экране.
  * Содержит в себе страницы.
- * Рисует только те страницы, которые были помещены в список pagesToDraw.
  * 
  * Книга является совокупностью множества фигур, рисуемых на экране:
  *  - Страницы
@@ -24,10 +23,12 @@ import android.graphics.Rect;
  * и нужно ли показывать страницы.
  */
 class ReaderBook extends ReaderGroupWithSize {
-	private ArrayList<ReaderPage> pages;
-	private ArrayList<ReaderPage> pagesToDraw;
-	private ArrayList<ReaderPage> fakePages;
-	private ArrayList<ReaderPage> fakePagesToDraw;
+	private ArrayList<ReaderPage> pages;           // страницы
+	private ArrayList<ReaderPage> pagesToDraw;     // страницы, которые будут отрисованы
+	private ArrayList<ReaderPage> fakePages;       // дубли страниц
+	private ArrayList<ReaderPage> fakePagesToDraw; // дубли страниц, которые будут отрисованы
+	// Дубли страниц нужны для user friendly перемещения к новой линии из страниц.
+	
 	private ReaderPage currentPage;
 	
 	private ArrayList<ReaderText> title;
@@ -38,6 +39,10 @@ class ReaderBook extends ReaderGroupWithSize {
 	private ArrayList<ReaderText> fullCreator;
 	private ArrayList<ReaderText> fullYear;
 	
+	/*
+	 * Необходимость отображения тех или иных элементов в зависимости от уровня зума
+	 * задается интервалами.
+	 */
 	private Interval pagesInterval;
 	private Interval minInfoInterval;
 	private Interval fullInfoInterval;
@@ -69,6 +74,13 @@ class ReaderBook extends ReaderGroupWithSize {
 		borderPaintWhenPagesShown = settings.bookPagesBorderPaint;
 	}
 	
+	/*
+	 * Ищет страницы, которые необходимо отрисовать.
+	 * Нужно запускать перед отрисовкой книги.
+	 * 
+	 * В режиме обзора отрисовываются те страницы, которые попали на экран.
+	 * В режиме чтения отрисовываются текущая, предыдущая и следующая страницы.
+	 */
 	public void update(Canvas canvas, ReaderMode mode, float zoom, ReaderSettings settings) {
 		switch(mode) {
 		case OVERVIEW:
@@ -91,6 +103,20 @@ class ReaderBook extends ReaderGroupWithSize {
 		
 	}
 	
+	/*
+	 * Ищет страницы, которые попадают в область экрана.
+	 * 
+	 * Общая идея алгоритма состоит в том, чтобы не бежать по всему массиву страниц,
+	 * проверяя, попадают ли они в экран.
+	 * 
+	 * Страницы представляют собой двухмерную матрицу,
+	 * по которой можно однозначно сказать, какие страницы попадают в тот или иной квадрат,
+	 * задаваемый границами экрана.
+	 * 
+	 * Если пронормировать координаты угров экрана, взяв размеры страницы за единицу
+	 * (ширину для оси X, высоту для оси Y),
+	 * то они покажут индексы крайних страниц, которые попадают в экран.
+	 */
 	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas, ArrayList<ReaderPage> p, float zoom, ReaderSettings settings) {
 		ArrayList<ReaderPage> toDraw = new ArrayList<ReaderPage>();
 		
@@ -105,9 +131,9 @@ class ReaderBook extends ReaderGroupWithSize {
 			float x = getAbsoluteX();
 			float y = getAbsoluteY();
 			
+			// Нормируем координаты
 			int startX = (int) Math.floor((rect.left - x) / pageWidth);
 			int endX = (int) Math.ceil((rect.right - x) / pageWidth);
-			
 			int startY = (int) Math.floor((rect.top - y) / pageHeight);
 			int endY = (int) Math.ceil((rect.bottom - y) / pageHeight);
 			

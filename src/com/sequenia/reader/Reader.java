@@ -8,14 +8,16 @@ import android.graphics.Canvas;
 
 /*
  * Читалка.
- * Объект этого класса содержит в себе книги, которые нужно показать на экране,
- * и умеет их рисовать.
- * Рисуются только те книги, которые были помещены в список booksToDraw.
+ * 
+ * Объект этого класса содержит в себе книги, которые нужно показать на экране, и умеет их рисовать.
+ * Рисует только те книги, которые попали в экран.
+ * 
+ * Предоставляет информацию о текущей книге.
  */
 public class Reader {
 	private ReaderSettings settings;
-	private ArrayList<ReaderBook> books;
-	private ArrayList<ReaderBook> booksToDraw;
+	private ArrayList<ReaderBook> books;        // Книги
+	private ArrayList<ReaderBook> booksToDraw;  // Книги, которые будут отрисованы
 	
 	private ReaderBook currentBook;
 	
@@ -108,11 +110,19 @@ public class Reader {
 			newBookX = newBookX + width + pageWidth;
 		}
 	}
-	
+
+	/*
+	 * Обновление читалки.
+	 * Ищет книги, которые необходимо отрисовать.
+	 * Необходимо запускать перед отрисовкой.
+	 */
 	public void update(Canvas canvas, ReaderMode mode, float zoom) {
 		booksToDraw = findBooksToDraw(canvas, mode, zoom);
 	}
 	
+	/*
+	 * Возвращает книги, которые находятся в пределах экрана
+	 */
 	private ArrayList<ReaderBook> findBooksToDraw(Canvas canvas, ReaderMode mode, float zoom) {
 		ArrayList<ReaderBook> toDraw = new ArrayList<ReaderBook>();
 		
@@ -136,6 +146,15 @@ public class Reader {
 		}
 	}
 	
+	/*
+	 * Возвращает ближайшую к центру экрана страницу.
+	 * 
+	 * Расстояние считается от центра экрана до центра страницы.
+	 * 
+	 * Поиск идет по страницам, которые находятся в пределах экрана,
+	 * по этому данный метод следует выполнять после вызова метода update,
+	 * который обновляет соответствующий массив.
+	 */
 	public ReaderPage getNearestPage(float canvasX, float canvasY) {
 		ReaderPage nearestPage = null;
 		float minDistance = 1000000000.0f;

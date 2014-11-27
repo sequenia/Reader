@@ -1,5 +1,8 @@
 package com.sequenia.reader;
 
+/*
+ * Теги и атрибуты epub файлов
+ */
 public class EpubInfo {
 	public static final String containerFileName = "META-INF/container.xml";
 	public static final String metadataTagName = "metadata";

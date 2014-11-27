@@ -3,6 +3,9 @@ package com.sequenia.reader;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+/*
+ * Настройки читалки и элементы по умолчанию
+ */
 public class ReaderSettings {
 	Paint bgPaint;
 	private int bgColor = Color.WHITE;

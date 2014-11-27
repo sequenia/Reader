@@ -9,6 +9,12 @@ import com.sequenia.reader.Book.PageElem;
 import com.sequenia.reader.Book.PageText;
 import com.sequenia.reader.LibraryManager.AddToLibraryTask;
 
+/*
+ * Используется для преобразования книги класса Book в формат, отображаемый на экране.
+ * 
+ * Основная идея состоит в том, чтобы разбить существующие страницы книги на более мелкие,
+ * которые поместятся на экране устройства.
+ */
 public class ReaderBookCreator {
 	public static enum LexemeType {
 		WORD, SPACES, NEW_LINE, SIGN, EMPTY
@@ -28,12 +34,18 @@ public class ReaderBookCreator {
 		return readerBook;
 	}
 	
+	/*
+	 * Заполненяет заголовочную информцию о книге (Писатель, Название и т.д.)
+	 */
 	private static void setBookInfo(ReaderBook readerBook, Book book, ReaderSettings settings) {
 		readerBook.setTitle(book.titles, settings);
 		readerBook.setCreator(book.creators, settings);
 		readerBook.setYear(book.dates, settings);
 	}
 	
+	/*
+	 * Дробит страницы книги на небольщие страницы, помещающиеся в экран.
+	 */
 	private static ArrayList<ReaderPage> createPages(Book book, ReaderSettings settings, AddToLibraryTask task) {
 		ArrayList<ReaderPage> readerPages = new ArrayList<ReaderPage>();
 		
@@ -44,7 +56,6 @@ public class ReaderBookCreator {
 		float pageContentWidth = pageWidth - settings.pagePadding * 2.0f;
 		float doubleLinesMargin = settings.linesMargin * 2.0f;
 		float currentContentHeight;
-
 		
 		int pagesCount = book.pages.size();
 		for(int i = 0; i < pagesCount; i++) {
@@ -52,10 +63,13 @@ public class ReaderBookCreator {
 			BookPage page = book.pages.get(i);
 			currentContentHeight = 0.0f;
 
+			// Каждая страница состоит из разных элементов.
+			// В зависимости от его типа производим различные дейсвтия
 			for(int j = 0; j < page.elements.size(); j++) {
 				PageElem elem = page.elements.get(j);
 				switch (elem.type) {
 				case Text:
+					// Разбиваем текст на мелкие странички
 					PageText pageText = (PageText) elem;
 					StringBuilder text = new StringBuilder(pageText.text);
 					
@@ -68,6 +82,7 @@ public class ReaderBookCreator {
 						currentContentHeight += settings.textSize + doubleLinesMargin;
 						readerPage.addLine(readerText);
 						
+						// Если место на странице кончилось, создаем новую
 						if(currentContentHeight >= pageContentHeight) {
 							readerPages.add(readerPage);
 							readerPage = new ReaderPage(pageWidth, pageHeight, settings);
@@ -91,6 +106,22 @@ public class ReaderBookCreator {
 		return readerPages;
 	}
 	
+	/*
+	 * Возвращает стоку, влезающую на экран.
+	 * Удаляет ее из text.
+	 * 
+	 * В реализации алгоритма используется класс StringBuilder, а не String,
+	 * так как он является более быстродействующим.
+	 * 
+	 * Идея алгоритма:
+	 * Добавляем к строке по одному слову из текста.
+	 * Если сточка не вмещается в экран, завершаем алгоритм.
+	 * 
+	 * Хак:
+	 * Я толком не генерирую новую строку во время действия алгоритма.
+	 * Я лишь рассчитываю, какой длины нужно взять строку, чтобы она поместилась на экране,
+	 * а потом вырезаю ее из text.
+	 */
 	private static StringBuilder getNextLine(StringBuilder text, Paint paint, float maxWidth) {
 		StringBuilder line = new StringBuilder("");
 		Lexeme lexeme;
@@ -98,6 +129,8 @@ public class ReaderBookCreator {
 		boolean lineCompleted = false;
 		
 		while(!lineCompleted) {
+			// Получаем информацию о следующей лексеме (Длина и тип)
+			// Лексемой может быть слово из букв, строка из пробелов, перевод коретки или пустота
 			lexeme = getNextLexeme(text);
 			lexemesCount++;
 			
@@ -159,7 +192,10 @@ public class ReaderBookCreator {
 		
 		return line;
 	}
-	
+
+	/*
+	 * Возвращает информацию о следующей лексеме: длину и тип.
+	 */
 	private static Lexeme getNextLexeme(StringBuilder text) {
 		Lexeme lexeme;
 		int currentCharIndex = 0;

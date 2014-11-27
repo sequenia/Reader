@@ -69,10 +69,8 @@ public class GestureSurface extends Surface {
 		public boolean onScale(ScaleGestureDetector detector) {
 			onSurfaceScale(detector);
 			/*
-			 * Если возвращать результат super, будем получать общее масштабирование,
-			 * начиная от срабатывания onScaleBegin.
-			 * Возвращая true, при каждом срабатывании данного метода
-			 * будет возвращаться увеличение, прошедшее с предыдущего вызова.
+			 * Если возвращать super, detector возвращает суммарное масштабирование от срабатывания onScaleBegin.
+			 * Если возвращать true, detector возвращает масштабирование, прошедшее с предыдущего вызова onScale.
 			 */
 			return true;
 		}
