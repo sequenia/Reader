@@ -10,6 +10,10 @@ import com.sequenia.reader.Book.PageText;
 import com.sequenia.reader.LibraryManager.AddToLibraryTask;
 
 public class ReaderBookCreator {
+	public static enum LexemeType {
+		WORD, SPACES, NEW_LINE, SIGN, EMPTY
+	}
+	
 	public static ReaderBook createReaderBook(Book book, ReaderSettings settings, float x, float y, AddToLibraryTask task) {
 		ReaderBook readerBook = new ReaderBook(settings);
 
@@ -89,46 +93,128 @@ public class ReaderBookCreator {
 	
 	private static StringBuilder getNextLine(StringBuilder text, Paint paint, float maxWidth) {
 		StringBuilder line = new StringBuilder("");
-		StringBuilder newLine = new StringBuilder("");
+		Lexeme lexeme;
+		int lexemesCount = 0;
 		boolean lineCompleted = false;
-		int currentCharIndex = 0;
-		int textLength = text.length();
 		
-		while(!lineCompleted && currentCharIndex < textLength) {
-			char c = text.charAt(currentCharIndex);
+		while(!lineCompleted) {
+			lexeme = getNextLexeme(text);
+			lexemesCount++;
 			
-			switch(c) {
-			case '\n':
+			int newLineLength;
+			float lineWidth;
+			
+			switch(lexeme.type) {
+			case EMPTY:
 				lineCompleted = true;
-				currentCharIndex++;
 				break;
-			default:
-				newLine.append(c);
-				
-				float width = getTextWidth(line, paint);
-				
-				if(width > maxWidth) {
-					lineCompleted = true;
+
+			case WORD:
+				newLineLength = line.length() + lexeme.length;
+				lineWidth = getTextWidth(newLineLength, paint);
+				if(lineWidth < maxWidth) {
+					for(int i = 0; i < lexeme.length; i++) {
+						line.append(text.charAt(i));
+					}
+					text.delete(0, lexeme.length);
 				} else {
-					line.append(c);
-					currentCharIndex++;
+					if(lexemesCount == 1) {
+						for(int i = 0; i < lexeme.length; i++) {
+							line.append(text.charAt(i));
+						}
+						text.delete(0, lexeme.length);
+					}
+					lineCompleted = true;
 				}
+				break;
 				
+			case SPACES:
+				newLineLength = line.length() + lexeme.length;
+				lineWidth = getTextWidth(newLineLength, paint);
+				if(lineWidth < maxWidth) {
+					for(int i = 0; i < lexeme.length; i++) {
+						line.append(text.charAt(i));
+					}
+					text.delete(0, lexeme.length);
+				} else {
+					if(lexemesCount == 1) {
+						for(int i = 0; i < lexeme.length; i++) {
+							line.append(text.charAt(i));
+						}
+						text.delete(0, lexeme.length);
+					}
+					lineCompleted = true;
+				}
+				break;
+				
+			case NEW_LINE:
+				text.delete(0, lexeme.length);
+				lineCompleted = true;
+				break;
+				
+			default:
 				break;
 			}
 		}
 		
-		text.delete(0, currentCharIndex);
-		
 		return line;
 	}
 	
-	public static float getTextWidth(String line, Paint paint) {
-		return line.length() * paint.getTextSize() / 1.8f;
+	private static Lexeme getNextLexeme(StringBuilder text) {
+		Lexeme lexeme;
+		int currentCharIndex = 0;
+		int textLength = text.length();
+		
+		if(textLength > 0) {
+			char c = text.charAt(currentCharIndex);
+			
+			switch (c) {
+			case '\n':
+				currentCharIndex++;
+				lexeme = new Lexeme(currentCharIndex, LexemeType.NEW_LINE);
+				break;
+				
+			case ' ':
+				while(c == ' ') {
+					currentCharIndex++;
+					if(currentCharIndex < textLength) {
+						c = text.charAt(currentCharIndex);
+					} else {
+						break;
+					}
+				}
+				lexeme = new Lexeme(currentCharIndex, LexemeType.SPACES);
+				break;
+
+			default:
+				while(c != ' ' && c != '\n') {
+					currentCharIndex++;
+					if(currentCharIndex < textLength) {
+						c = text.charAt(currentCharIndex);
+					} else {
+						break;
+					}
+				}
+				lexeme = new Lexeme(currentCharIndex, LexemeType.WORD);
+				break;
+			}
+		} else {
+			lexeme = new Lexeme(0, LexemeType.EMPTY);
+		}
+		
+		return lexeme;
 	}
 	
-	public static float getTextWidth(StringBuilder line, Paint paint) {
-		return line.length() * paint.getTextSize() / 1.8f;
+	public static float getTextWidth(String text, Paint paint) {
+		return text.length() * paint.getTextSize() / 1.8f;
+	}
+	
+	public static float getTextWidth(StringBuilder text, Paint paint) {
+		return text.length() * paint.getTextSize() / 1.8f;
+	}
+	
+	public static float getTextWidth(int textLength, Paint paint) {
+		return textLength * paint.getTextSize() / 1.8f;
 	}
 	
 	private static void addPagesToReaderBook(ReaderBook readerBook, ArrayList<ReaderPage> pages, ReaderSettings settings) {
@@ -161,5 +247,15 @@ public class ReaderBookCreator {
 		float height = (float) (Math.ceil(((float)pagesCount / (float)pagesPerLine)) * settings.getScreenHeight());
 		readerBook.setWidth(width);
 		readerBook.setHeight(height);
+	}
+	
+	private static class Lexeme {
+		public int length;
+		public LexemeType type;
+		
+		public Lexeme(int _length, LexemeType _type) {
+			length = _length;
+			type = _type;
+		}
 	}
 }
