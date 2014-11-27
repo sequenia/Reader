@@ -121,7 +121,7 @@ public class Reader {
 			
 			if(book.isInScreen(canvas)) {
 				toDraw.add(book);
-				book.update(canvas, mode, zoom);
+				book.update(canvas, mode, zoom, settings);
 			}
 		}
 		

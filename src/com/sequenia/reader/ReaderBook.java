@@ -6,6 +6,7 @@ import com.sequenia.reader.ReaderSurface.ReaderMode;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 /*
  * Книга читалки. Представляет собой книгу, рисуемую на экране.
@@ -68,10 +69,10 @@ class ReaderBook extends ReaderGroupWithSize {
 		borderPaintWhenPagesShown = settings.bookPagesBorderPaint;
 	}
 	
-	public void update(Canvas canvas, ReaderMode mode, float zoom) {
+	public void update(Canvas canvas, ReaderMode mode, float zoom, ReaderSettings settings) {
 		switch(mode) {
 		case OVERVIEW:
-			pagesToDraw = findPagesToDraw(canvas, pages, zoom);
+			pagesToDraw = findPagesToDraw(canvas, pages, zoom, settings);
 			break;
 			
 		case READING:
@@ -90,15 +91,32 @@ class ReaderBook extends ReaderGroupWithSize {
 		
 	}
 	
-	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas, ArrayList<ReaderPage> p, float zoom) {
+	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas, ArrayList<ReaderPage> p, float zoom, ReaderSettings settings) {
 		ArrayList<ReaderPage> toDraw = new ArrayList<ReaderPage>();
 		
 		if(pagesInterval.isIn(zoom)) {
-			for(int i = 0; i < p.size(); i++) {
-				ReaderPage page = p.get(i);
-				
-				if(page.isInScreen(canvas)) {
-					toDraw.add(page);
+			int pagesCount = pages.size();
+			int pagesPerLine = (int) Math.ceil(Math.sqrt(pagesCount));
+			
+			Rect rect = canvas.getClipBounds();
+			
+			float pageWidth = settings.getScreenWidth();
+			float pageHeight = settings.getScreenHeight();
+			float x = getAbsoluteX();
+			float y = getAbsoluteY();
+			
+			int startX = (int) Math.floor((rect.left - x) / pageWidth);
+			int endX = (int) Math.ceil((rect.right - x) / pageWidth);
+			
+			int startY = (int) Math.floor((rect.top - y) / pageHeight);
+			int endY = (int) Math.ceil((rect.bottom - y) / pageHeight);
+			
+			for(int i = startY; i < endY; i++) {
+				for(int j = startX; j < endX; j++) {
+					int index = pagesPerLine * i + j;
+					if(index < pagesCount && index >= 0) {
+						toDraw.add(pages.get(index));
+					}
 				}
 			}
 		}
