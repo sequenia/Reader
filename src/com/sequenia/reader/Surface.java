@@ -58,6 +58,10 @@ public class Surface extends SurfaceView implements SurfaceHolder.Callback {
 		canvas.drawColor(Color.rgb((int)(Math.random() * 255), (int)(Math.random() * 255), (int)(Math.random() * 255)));
 	}
 	
+	public boolean isCreated() {
+		return created;
+	}
+	
 	/*
 	 * Останавливает рисовку путем удаления потока рисования
 	 * ВНИМАНИЕ! Для корректной работы его необходимо вызывать в onPause у Activity

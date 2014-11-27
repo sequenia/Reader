@@ -24,9 +24,11 @@ class ReaderPage extends ReaderGroupWithSize {
 	private Paint readBgPaint;
 	private Paint currentBgPaint;
 	private Paint currentBorderPaint;
+	private Paint fakeTextPaint;
 	
 	private Interval bgInterval;
 	private Interval textInterval;
+	private Interval fakeTextInterval;
 	
 	private boolean isRead = false;
 	private boolean isCurrent = false;
@@ -39,8 +41,9 @@ class ReaderPage extends ReaderGroupWithSize {
 		previous = null;
 		fake = null;
 		
-		bgInterval = new Interval(0.05f, 0.25f, false, true);
-		textInterval = new Interval(0.2f, 100.0f, false, true);
+		bgInterval = new Interval(0.05f, 0.6f, false, true);
+		fakeTextInterval = new Interval(0.1f, 0.3f, false, true);
+		textInterval = new Interval(0.3f, 100.0f, false, true);
 		
 		createBorders(settings.pageBorderPaint);
 
@@ -48,6 +51,7 @@ class ReaderPage extends ReaderGroupWithSize {
 		currentBgPaint = settings.currentPageBgPaint;
 		readBgPaint = settings.readPageBgPaint;
 		currentBorderPaint = settings.currentPageBorderPaint;
+		fakeTextPaint = settings.fakeTextPaint;
 	}
 	
 	@Override
@@ -61,6 +65,10 @@ class ReaderPage extends ReaderGroupWithSize {
 
 		if(textInterval.isIn(zoom)) {
 			drawText(canvas, zoom);
+		}
+		
+		if(fakeTextInterval.isIn(zoom)) {
+			drawFakeText(canvas, zoom);
 		}
 
 		return true;
@@ -81,6 +89,23 @@ class ReaderPage extends ReaderGroupWithSize {
 	public boolean drawText(Canvas canvas, float zoom) {
 		for(int i = 0; i < lines.size(); i++) {
 			lines.get(i).draw(canvas, zoom);
+		}
+		return true;
+	}
+	
+	public boolean drawFakeText(Canvas canvas, float zoom) {
+		for(int i = 0; i < lines.size(); i++) {
+			ReaderText line = lines.get(i);
+			
+			Paint textPaint = line.getPaint();
+			Paint paint = fakeTextPaint;
+			float textSize = textPaint.getTextSize();
+			float x = line.getAbsoluteX();
+			float y = line.getAbsoluteY();
+			float width = ReaderBookCreator.getTextWidth(line.getText(), textPaint);
+			float height = textSize / 2.0f;
+			
+			canvas.drawRect(x, y, x + width, y + height, paint);
 		}
 		return true;
 	}

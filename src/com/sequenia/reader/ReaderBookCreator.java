@@ -105,7 +105,7 @@ public class ReaderBookCreator {
 			default:
 				newLine.append(c);
 				
-				float width = line.length() * paint.getTextSize() / 1.8f;
+				float width = getTextWidth(line, paint);
 				
 				if(width > maxWidth) {
 					lineCompleted = true;
@@ -121,6 +121,14 @@ public class ReaderBookCreator {
 		text.delete(0, currentCharIndex);
 		
 		return line;
+	}
+	
+	public static float getTextWidth(String line, Paint paint) {
+		return line.length() * paint.getTextSize() / 1.8f;
+	}
+	
+	public static float getTextWidth(StringBuilder line, Paint paint) {
+		return line.length() * paint.getTextSize() / 1.8f;
 	}
 	
 	private static void addPagesToReaderBook(ReaderBook readerBook, ArrayList<ReaderPage> pages, ReaderSettings settings) {

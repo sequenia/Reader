@@ -51,6 +51,11 @@ public class LibraryManager {
 		protected Void doInBackground(String... params) {
 			Book book = BookParser.construct(filename).parse();
 			
+			if(book == null) {
+				System.out.println("Ошибка при парсинге книги");
+				return null;
+			}
+
 			float readerBookX = 0.0f;
 			float readerBookY = 0.0f;
 

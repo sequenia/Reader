@@ -77,6 +77,7 @@ class EpubParser extends BookParser {
 		
 		org.w3c.dom.Document containerXml = getDomDocumentFromBuffer(files.findNode(containerFileName).getData());
 		String rootFileName = getRootFileName(containerXml);
+		if(rootFileName == null) { return null; }
 		
 		org.w3c.dom.Document rootFile = getDomDocumentFromBuffer(files.findNode(rootFileName).getData());
 		if(!parseMetadata(rootFile, book)) { return null; }
@@ -119,7 +120,7 @@ class EpubParser extends BookParser {
 			return false;
 		}
 		
-		NodeList nList = file.getElementsByTagName(EpubInfo.bodyTagName);
+		NodeList nList = getElementsByTagName(file, EpubInfo.bodyTagName);
 		if(nList.getLength() == 0) {
 			System.out.println("ОШИБКА: parseSpineFile - отсутствует body в документе.");
 			return false; 
@@ -152,7 +153,7 @@ class EpubParser extends BookParser {
 			return null;
 		}
 		
-		NodeList nList = xml.getElementsByTagName(EpubInfo.spineTagName);
+		NodeList nList = getElementsByTagName(xml, EpubInfo.spineTagName);
 		if(nList.getLength() == 0) {
 			System.out.println("ОШИБКА: parseSpine - отсутствует spine.");
 			return null; 
@@ -161,7 +162,7 @@ class EpubParser extends BookParser {
 		Element spine = (Element)nList.item(0);
 		ArrayList<SpineItem> spineItems = new ArrayList<SpineItem>();
 		
-		nList = spine.getElementsByTagName(EpubInfo.itemrefTagName);
+		nList = getElementsByTagName(spine, EpubInfo.itemrefTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			Element elem = (Element) nNode;
@@ -179,7 +180,7 @@ class EpubParser extends BookParser {
 			return false;
 		}
 
-		NodeList nList = xml.getElementsByTagName(EpubInfo.metadataTagName);
+		NodeList nList = getElementsByTagName(xml, EpubInfo.metadataTagName);
 		if(nList.getLength() == 0) {
 			System.out.println("ОШИБКА: parseMetadata - отсутствуют метаданные.");
 			return false; 
@@ -187,37 +188,37 @@ class EpubParser extends BookParser {
 		
 		Element metadata = (Element)nList.item(0);
 				
-		nList =  metadata.getElementsByTagName(EpubInfo.titleTagName);
+		nList =  getElementsByTagName(metadata, EpubInfo.titleTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			book.titles.add(nNode.getTextContent());
 		}
 		
-		nList = metadata.getElementsByTagName(EpubInfo.dateTagName);
+		nList = getElementsByTagName(metadata, EpubInfo.dateTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			book.dates.add(nNode.getTextContent());
 		}
 		
-		nList = metadata.getElementsByTagName(EpubInfo.creatorTagName);
+		nList = getElementsByTagName(metadata, EpubInfo.creatorTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			book.creators.add(nNode.getTextContent());
 		}
 		
-		nList = metadata.getElementsByTagName(EpubInfo.contributorTagName);
+		nList = getElementsByTagName(metadata, EpubInfo.contributorTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			book.contributors.add(nNode.getTextContent());
 		}
 		
-		nList = metadata.getElementsByTagName(EpubInfo.publisherTagName);
+		nList = getElementsByTagName(metadata, EpubInfo.publisherTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			book.publishers.add(nNode.getTextContent());
 		}
 		
-		nList = metadata.getElementsByTagName(EpubInfo.descriptionTagName);
+		nList = getElementsByTagName(metadata, EpubInfo.descriptionTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			book.descriptions.add(nNode.getTextContent());
@@ -232,7 +233,7 @@ class EpubParser extends BookParser {
 			return null;
 		}
 		
-		NodeList nList = xml.getElementsByTagName(EpubInfo.manifestTagName);
+		NodeList nList = getElementsByTagName(xml, EpubInfo.manifestTagName);
 		if(nList.getLength() == 0) {
 			System.out.println("ОШИБКА: parseMetadata - отсутствует манифест.");
 			return null; 
@@ -241,7 +242,7 @@ class EpubParser extends BookParser {
 		Element manifest = (Element)nList.item(0);
 		HashMap<String, ManifestItem> manifestItems = new HashMap<String, ManifestItem>();
 		
-		nList = manifest.getElementsByTagName(EpubInfo.itemTagName);
+		nList = getElementsByTagName(manifest, EpubInfo.itemTagName);
 		for(int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 			Element elem = (Element) nNode;
@@ -261,7 +262,7 @@ class EpubParser extends BookParser {
 			return null;
 		}
 
-		NodeList nList = xml.getElementsByTagName(EpubInfo.rootFileTagName);
+		NodeList nList = getElementsByTagName(xml, EpubInfo.rootFileTagName);
 		if(nList.getLength() == 0) {
 			System.out.println("ОШИБКА: no rootfile tag in container xml");
 			return null;
@@ -332,4 +333,19 @@ class EpubParser extends BookParser {
 		}
 	}
 	
+	private NodeList getElementsByTagName(org.w3c.dom.Document xml, String tagname) {
+		NodeList nList = xml.getElementsByTagName(tagname);
+		if(nList.getLength() == 0) {
+			nList = xml.getElementsByTagNameNS("*", tagname);
+		}
+		return nList;
+	}
+	
+	private NodeList getElementsByTagName(Element element, String tagname) {
+		NodeList nList = element.getElementsByTagName(tagname);
+		if(nList.getLength() == 0) {
+			nList = element.getElementsByTagNameNS("*", tagname);
+		}
+		return nList;
+	}
 }

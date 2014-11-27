@@ -2,6 +2,8 @@ package com.sequenia.reader;
 
 import java.util.ArrayList;
 
+import com.sequenia.reader.ReaderSurface.ReaderMode;
+
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
@@ -66,23 +68,52 @@ class ReaderBook extends ReaderGroupWithSize {
 		borderPaintWhenPagesShown = settings.bookPagesBorderPaint;
 	}
 	
-	public void update(Canvas canvas) {
-		pagesToDraw = findPagesToDraw(canvas, pages);
-		fakePagesToDraw = findPagesToDraw(canvas, fakePages);
+	public void update(Canvas canvas, ReaderMode mode, float zoom) {
+		switch(mode) {
+		case OVERVIEW:
+			pagesToDraw = findPagesToDraw(canvas, pages, zoom);
+			break;
+			
+		case READING:
+			pagesToDraw = new ArrayList<ReaderPage>();
+			fakePagesToDraw = new ArrayList<ReaderPage>();
+			addPageToDrawArray(currentPage);
+			if(currentPage != null) {
+				addPageToDrawArray(currentPage.getPrevious());
+				addPageToDrawArray(currentPage.getNext());
+			}
+			break;
+			
+		default:
+			break;
+		}
+		
 	}
 	
-	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas, ArrayList<ReaderPage> p) {
+	private ArrayList<ReaderPage> findPagesToDraw(Canvas canvas, ArrayList<ReaderPage> p, float zoom) {
 		ArrayList<ReaderPage> toDraw = new ArrayList<ReaderPage>();
 		
-		for(int i = 0; i < p.size(); i++) {
-			ReaderPage page = p.get(i);
-			
-			if(page.isInScreen(canvas)) {
-				toDraw.add(page);
+		if(pagesInterval.isIn(zoom)) {
+			for(int i = 0; i < p.size(); i++) {
+				ReaderPage page = p.get(i);
+				
+				if(page.isInScreen(canvas)) {
+					toDraw.add(page);
+				}
 			}
 		}
 		
 		return toDraw;
+	}
+	
+	private void addPageToDrawArray(ReaderPage page) {
+		if(page != null) {
+			pagesToDraw.add(page);
+			ReaderPage fake = page.getFake();
+			if(fake != null) {
+				fakePagesToDraw.add(fake);
+			}
+		}
 	}
 	
 	@Override

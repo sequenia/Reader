@@ -141,7 +141,13 @@ public class OpenFileDialog extends AlertDialog.Builder {
     
     private List<File> getFiles(String directoryPath){
         File directory = new File(directoryPath);
-        List<File> fileList = Arrays.asList(directory.listFiles(filenameFilter));
+        File[] files = directory.listFiles(filenameFilter);
+        List<File> fileList;
+        if(files != null) {
+        	fileList = Arrays.asList(files);
+        } else {
+        	fileList = new ArrayList<File>();
+        }
         Collections.sort(fileList, new Comparator<File>() {
             @Override
             public int compare(File file, File file2) {

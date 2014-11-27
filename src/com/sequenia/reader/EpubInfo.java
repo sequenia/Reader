@@ -3,12 +3,12 @@ package com.sequenia.reader;
 public class EpubInfo {
 	public static final String containerFileName = "META-INF/container.xml";
 	public static final String metadataTagName = "metadata";
-	public static final String titleTagName = "dc:title";
-	public static final String dateTagName = "dc:date";
-	public static final String creatorTagName = "dc:creator";
-	public static final String contributorTagName = "dc:contributor";
-	public static final String publisherTagName = "dc:publisher";
-	public static final String descriptionTagName = "dc:description";
+	public static final String titleTagName = "title";
+	public static final String dateTagName = "date";
+	public static final String creatorTagName = "creator";
+	public static final String contributorTagName = "contributor";
+	public static final String publisherTagName = "publisher";
+	public static final String descriptionTagName = "description";
 	
 	public static final String manifestTagName = "manifest";
 	public static final String itemTagName = "item";

@@ -60,7 +60,9 @@ public class ReaderSurface extends GestureSurface {
 		settings.setScreenWidth(screenSize.x);
 		settings.setScreenHeight(screenSize.y);
 		
-		reader = new Reader(settings);
+		if(!isCreated()) {
+			reader = new Reader(settings);
+		}
 
 		super.surfaceCreated(arg0);
 	}
@@ -71,7 +73,7 @@ public class ReaderSurface extends GestureSurface {
 
 		update(time);
 		updateCanvasMatrix(canvas);
-		reader.update(canvas);
+		reader.update(canvas, mode, scaleFactor);
 		postUpdate(time);
 
 		reader.draw(canvas, delta, scaleFactor);

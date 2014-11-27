@@ -1,6 +1,9 @@
 package com.sequenia.reader;
 
 import java.util.ArrayList;
+
+import com.sequenia.reader.ReaderSurface.ReaderMode;
+
 import android.graphics.Canvas;
 
 /*
@@ -106,11 +109,11 @@ public class Reader {
 		}
 	}
 	
-	public void update(Canvas canvas) {
-		booksToDraw = findBooksToDraw(canvas);
+	public void update(Canvas canvas, ReaderMode mode, float zoom) {
+		booksToDraw = findBooksToDraw(canvas, mode, zoom);
 	}
 	
-	private ArrayList<ReaderBook> findBooksToDraw(Canvas canvas) {
+	private ArrayList<ReaderBook> findBooksToDraw(Canvas canvas, ReaderMode mode, float zoom) {
 		ArrayList<ReaderBook> toDraw = new ArrayList<ReaderBook>();
 		
 		for(int i = 0; i < books.size(); i++) {
@@ -118,7 +121,7 @@ public class Reader {
 			
 			if(book.isInScreen(canvas)) {
 				toDraw.add(book);
-				book.update(canvas);
+				book.update(canvas, mode, zoom);
 			}
 		}
 		

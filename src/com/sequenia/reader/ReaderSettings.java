@@ -10,8 +10,11 @@ public class ReaderSettings {
 	Paint textPaint;
 	private int textColor = Color.BLACK;
 	float textSize = 25.0f;
-	float pagePadding = 10.0f;
+	float pagePadding = 25.0f;
 	float linesMargin = 5.0f;
+	
+	Paint fakeTextPaint;
+	private int fakeTextColor = Color.rgb(159, 199, 159);
 	
 	Paint minInfoPaint;
 	private int minInfoColor = Color.BLACK;
@@ -88,6 +91,11 @@ public class ReaderSettings {
 		textPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 		textPaint.setTextSize(textSize);
 		textPaint.setAntiAlias(true);
+		
+		fakeTextPaint = new Paint();
+		fakeTextPaint.setColor(fakeTextColor);
+		fakeTextPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+		fakeTextPaint.setAntiAlias(true);
 		
 		minInfoPaint = new Paint();
 		minInfoPaint.setColor(minInfoColor);
