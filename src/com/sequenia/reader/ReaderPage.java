@@ -42,8 +42,8 @@ class ReaderPage extends ReaderGroupWithSize {
 		fake = null;
 		
 		bgInterval = new Interval(0.05f, 0.6f, false, true);
-		fakeTextInterval = new Interval(0.1f, 0.3f, false, true);
-		textInterval = new Interval(0.3f, 100.0f, false, true);
+		fakeTextInterval = new Interval(0.1f, 0.4f, false, true);
+		textInterval = new Interval(0.4f, 100.0f, false, true);
 		
 		createBorders(settings.pageBorderPaint);
 
