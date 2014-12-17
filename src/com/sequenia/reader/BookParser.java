@@ -31,7 +31,7 @@ import com.sequenia.reader.Book.PageText;
 public class BookParser {
 	private String filename;
 	
-	public static BookParser construct(String _filename) { 
+	public static BookParser construct(String _filename) {
 		String extension = _filename.substring(_filename.lastIndexOf("."));
 		BookParser parser;
 		
@@ -84,26 +84,57 @@ class EpubParser extends BookParser {
 	
 	@Override
 	public Book parse() {
+		System.out.println("Парсинг книги EPUB....");
+
 		String filename = getFilename();
+		System.out.println("Название файла: " + filename);
+		
+		// В файле с именем containerFileName находится путь к файлу, в котором описана структура книги
 		String containerFileName = EpubInfo.containerFileName;
 		
 		Book book = new Book();
+
+		// EPUB является zip архивом. Считываем файлы из архива в файловое дерево
+		System.out.println("Чтение из zip архива...");
 		FilesTree files = zipToFiles(filename);
-		
+		System.out.println("Чтение из архива завершено");
+
 		org.w3c.dom.Document containerXml = getDomDocumentFromBuffer(files.findNode(containerFileName).getData());
 		String rootFileName = getRootFileName(containerXml);
-		if(rootFileName == null) { return null; }
+		if(rootFileName == null) {
+			System.out.println("ОШИБКА: нет имени корневого файла в " + containerFileName);
+			return null;
+		}
+		System.out.println("Имя корневого файла: " + rootFileName);
 		
+		// rootFile - файл с описанием структуры книги
+		System.out.println("Чтение данных из корневого файла...");
 		org.w3c.dom.Document rootFile = getDomDocumentFromBuffer(files.findNode(rootFileName).getData());
-		if(!parseMetadata(rootFile, book)) { return null; }
+		if(!parseMetadata(rootFile, book)) {
+			System.out.println("ОШИБКА: Не удалость считать метаданные");
+			return null;
+		}
+		System.out.println("Метаданные считаны");
 		
 		HashMap<String, ManifestItem> manifest = parseManifest(rootFile);
-		if(manifest == null) { return null; }
+		if(manifest == null) {
+			System.out.println("ОШИБКА: не удалось считать манифест");
+			return null;
+		}
+		System.out.println("Манифест считан");
 		
 		ArrayList<SpineItem> spine = parseSpine(rootFile);
-		if(spine == null) { return null; }
+		if(spine == null) {
+			System.out.println("ОШИБКА: не удалось считать позвоночник");
+			return null;
+		}
+		System.out.println("Позвоночник считан");
+		System.out.println("Чтение данных из корневого файла закончено");
 		
+		System.out.println("Чтение контента книги...");
 		parseBookContent(book, files, manifest, spine, rootFileName);
+		System.out.println("Чтение контента книги закончено");
+		System.out.println("Парсинг EPUB завершен!");
 		
 		return book;
 	}
@@ -313,6 +344,7 @@ class EpubParser extends BookParser {
 		org.w3c.dom.Document doc = null;
 		try {
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			dbFactory.setNamespaceAware(true);
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			try {
 				doc = dBuilder.parse(new ByteArrayInputStream(buffer.toByteArray()));

@@ -21,15 +21,25 @@ public class ReaderBookCreator {
 	}
 	
 	public static ReaderBook createReaderBook(Book book, ReaderSettings settings, float x, float y, AddToLibraryTask task) {
+		System.out.println("Преобразование книги к отображаемому формату...");
+		
 		ReaderBook readerBook = new ReaderBook(settings);
 
 		readerBook.setPosition(x, y);
+		System.out.println("Задание информации на обложке...");
 		setBookInfo(readerBook, book, settings);
+		System.out.println("Задание информации на обложке завершено");
 
+		System.out.println("Создание страниц...");
 		ArrayList<ReaderPage> pages = createPages(book, settings, task);
+		System.out.println("Создание страниц завершено");
+
+		System.out.println("Добавление страниц в книгу...");
 		addPagesToReaderBook(readerBook, pages, settings);
+		System.out.println("Добавление страниц в книгу завершено");
 
 		readerBook.createBorders(settings.bookBorderPaint);
+		System.out.println("Преобразование книги к отображаемому формату завершено!");
 		
 		return readerBook;
 	}
@@ -58,6 +68,7 @@ public class ReaderBookCreator {
 		float currentContentHeight;
 		
 		int pagesCount = book.pages.size();
+		int updatePeriod = pagesCount / 10;
 		for(int i = 0; i < pagesCount; i++) {
 			ReaderPage readerPage = new ReaderPage(pageWidth, pageHeight, settings);
 			BookPage page = book.pages.get(i);
@@ -96,7 +107,7 @@ public class ReaderBookCreator {
 				}
 			}
 			
-			if(i % 20 == 0) {
+			if(i % updatePeriod == 0) {
 				task.publish(100 * i / pagesCount);
 			}
 			
