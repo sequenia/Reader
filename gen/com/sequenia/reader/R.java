@@ -982,9 +982,10 @@ containing a value of this type.
         public static final int abc_textfield_searchview_right_holo_dark=0x7f020055;
         public static final int abc_textfield_searchview_right_holo_light=0x7f020056;
         public static final int ic_launcher=0x7f020057;
+        public static final int listview_shape=0x7f020058;
+        public static final int shape_head=0x7f020059;
     }
     public static final class id {
-        public static final int about_content=0x7f05003c;
         public static final int action_add_to_library=0x7f05003e;
         public static final int action_bar=0x7f05001c;
         public static final int action_bar_activity_content=0x7f050015;
@@ -1045,6 +1046,7 @@ containing a value of this type.
         public static final int tabMode=0x7f050002;
         public static final int title=0x7f05002b;
         public static final int top_action_bar=0x7f050020;
+        public static final int tv_name=0x7f05003c;
         public static final int up=0x7f050021;
         public static final int useLogo=0x7f050003;
         public static final int withText=0x7f05000c;
@@ -1100,7 +1102,8 @@ containing a value of this type.
         public static final int abc_search_view=0x7f030016;
         public static final int activity_library=0x7f030017;
         public static final int activity_main=0x7f030018;
-        public static final int support_simple_spinner_dropdown_item=0x7f030019;
+        public static final int list_data=0x7f030019;
+        public static final int support_simple_spinner_dropdown_item=0x7f03001a;
     }
     public static final class menu {
         public static final int main=0x7f0c0000;
@@ -1149,6 +1152,7 @@ containing a value of this type.
         public static final int action_add_to_library=0x7f0a000f;
         public static final int action_to_current_page=0x7f0a000e;
         public static final int app_name=0x7f0a000d;
+        public static final int books=0x7f0a0011;
         public static final int library=0x7f0a0010;
     }
     public static final class style {
