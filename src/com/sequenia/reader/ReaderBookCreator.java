@@ -1,10 +1,21 @@
 package com.sequenia.reader;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import android.content.Context;
 import android.graphics.Paint;
 
 import com.sequenia.reader.LibraryManager.AddToLibraryTask;
+import com.sequenia.reader.db.DbBook;
 import com.sequenia.reader.parsers.Book;
 import com.sequenia.reader.parsers.Book.BookPage;
 import com.sequenia.reader.parsers.Book.PageElem;
@@ -13,18 +24,62 @@ import com.sequenia.reader.reader_objects.ReaderBook;
 import com.sequenia.reader.reader_objects.ReaderPage;
 import com.sequenia.reader.reader_objects.ReaderText;
 
-/*
- * Используется для преобразования книги класса Book в формат, отображаемый на экране.
- * 
- * Основная идея состоит в том, чтобы разбить существующие страницы книги на более мелкие,
- * которые поместятся на экране устройства.
- */
 public class ReaderBookCreator {
 	public static enum LexemeType {
 		WORD, SPACES, NEW_LINE, SIGN, EMPTY
 	}
 	
-	public static ReaderBook createReaderBook(Book book, ReaderSettings settings, float x, float y, AddToLibraryTask task) {
+	public static void createParsedTextFile(Book book, String parsedTextPath,
+			ReaderSettings settings, AddToLibraryTask task, Context context) {
+		float pageWidth = settings.getScreenWidth();
+		float pageContentWidth = pageWidth - settings.pagePadding * 2.0f;
+		
+		int pagesCount = book.pages.size();
+		int updatePeriod = pagesCount / 10;
+		
+		FileOutputStream outputStream;
+		try {
+			outputStream = context.openFileOutput(parsedTextPath, Context.MODE_PRIVATE);
+			try {
+				for(int i = 0; i < pagesCount; i++) {
+					BookPage page = book.pages.get(i);
+	
+					// Каждая страница состоит из разных элементов.
+					// В зависимости от его типа производим различные дейсвтия
+					for(int j = 0; j < page.elements.size(); j++) {
+						PageElem elem = page.elements.get(j);
+						switch (elem.type) {
+						case Text:
+							PageText pageText = (PageText) elem;
+							StringBuilder text = new StringBuilder(pageText.text);
+							
+							while(text.length() != 0) {
+								String line = getNextLine(text, settings.textPaint, pageContentWidth).toString();
+								outputStream.write(line.getBytes());
+							}
+							break;
+	
+						default:
+							break;
+						}
+					}
+					
+					if(i % updatePeriod == 0) {
+						task.publish(100 * i / pagesCount);
+					}
+				}
+				
+				outputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static ReaderBook createReaderBook(DbBook book, ReaderSettings settings, float x, float y) {
 		System.out.println("Преобразование книги к отображаемому формату...");
 		
 		ReaderBook readerBook = new ReaderBook(settings);
@@ -35,7 +90,7 @@ public class ReaderBookCreator {
 		System.out.println("Задание информации на обложке завершено");
 
 		System.out.println("Создание страниц...");
-		ArrayList<ReaderPage> pages = createPages(book, settings, task);
+		ArrayList<ReaderPage> pages = createPages(book, settings);
 		System.out.println("Создание страниц завершено");
 
 		System.out.println("Добавление страниц в книгу...");
@@ -51,7 +106,7 @@ public class ReaderBookCreator {
 	/*
 	 * Заполненяет заголовочную информцию о книге (Писатель, Название и т.д.)
 	 */
-	private static void setBookInfo(ReaderBook readerBook, Book book, ReaderSettings settings) {
+	private static void setBookInfo(ReaderBook readerBook, DbBook book, ReaderSettings settings) {
 		readerBook.setTitle(book.titles, settings);
 		readerBook.setCreator(book.creators, settings);
 		readerBook.setYear(book.dates, settings);
@@ -60,63 +115,50 @@ public class ReaderBookCreator {
 	/*
 	 * Дробит страницы книги на небольщие страницы, помещающиеся в экран.
 	 */
-	private static ArrayList<ReaderPage> createPages(Book book, ReaderSettings settings, AddToLibraryTask task) {
+	private static ArrayList<ReaderPage> createPages(DbBook book, ReaderSettings settings) {
 		ArrayList<ReaderPage> readerPages = new ArrayList<ReaderPage>();
 		
 		float pageWidth = settings.getScreenWidth();
 		float pageHeight = settings.getScreenHeight();
 		float textStartY = settings.pagePadding + settings.textSize;
 		float pageContentHeight = pageHeight - settings.pagePadding * 2.0f - settings.textSize;
-		float pageContentWidth = pageWidth - settings.pagePadding * 2.0f;
 		float doubleLinesMargin = settings.linesMargin * 2.0f;
 		float currentContentHeight;
 		
-		int pagesCount = book.pages.size();
-		int updatePeriod = pagesCount / 10;
-		for(int i = 0; i < pagesCount; i++) {
+		File file = new File(book.parsedTextPath);
+		InputStream is = null;
+		try {
+			is = new BufferedInputStream(new FileInputStream(file));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			String line;
+			
 			ReaderPage readerPage = new ReaderPage(pageWidth, pageHeight, settings);
-			BookPage page = book.pages.get(i);
 			currentContentHeight = 0.0f;
-
-			// Каждая страница состоит из разных элементов.
-			// В зависимости от его типа производим различные дейсвтия
-			for(int j = 0; j < page.elements.size(); j++) {
-				PageElem elem = page.elements.get(j);
-				switch (elem.type) {
-				case Text:
-					// Разбиваем текст на мелкие странички
-					PageText pageText = (PageText) elem;
-					StringBuilder text = new StringBuilder(pageText.text);
+			try {
+				while ((line = reader.readLine()) != null) {
+					ReaderText readerText = new ReaderText(line);
+					readerText.setPaint(settings.textPaint);
+					readerText.setPosition(settings.pagePadding, currentContentHeight + textStartY);
+					currentContentHeight += settings.textSize + doubleLinesMargin;
+					readerPage.addLine(readerText);
 					
-					while(text.length() != 0) {
-						String line = getNextLine(text, settings.textPaint, pageContentWidth).toString();
-						
-						ReaderText readerText = new ReaderText(line);
-						readerText.setPaint(settings.textPaint);
-						readerText.setPosition(settings.pagePadding, currentContentHeight + textStartY);
-						currentContentHeight += settings.textSize + doubleLinesMargin;
-						readerPage.addLine(readerText);
-						
-						// Если место на странице кончилось, создаем новую
-						if(currentContentHeight >= pageContentHeight) {
-							readerPages.add(readerPage);
-							readerPage = new ReaderPage(pageWidth, pageHeight, settings);
-							currentContentHeight = 0.0f;
-						}
+					// Если место на странице кончилось, создаем новую
+					if(currentContentHeight >= pageContentHeight) {
+						readerPages.add(readerPage);
+						readerPage = new ReaderPage(pageWidth, pageHeight, settings);
+						currentContentHeight = 0.0f;
 					}
-					break;
-
-				default:
-					break;
 				}
+				
+				readerPages.add(readerPage);
+				is.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			
-			if(i % updatePeriod == 0) {
-				task.publish(100 * i / pagesCount);
-			}
-			
-			readerPages.add(readerPage);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
 		}
+
 		
 		return readerPages;
 	}

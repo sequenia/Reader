@@ -1,7 +1,10 @@
 package com.sequenia.reader;
 
 import java.util.ArrayList;
+import java.util.Random;
 
+import com.sequenia.reader.db.Db4oProvider;
+import com.sequenia.reader.db.DbBook;
 import com.sequenia.reader.parsers.Book;
 import com.sequenia.reader.parsers.BookParser;
 import com.sequenia.reader.reader_objects.ReaderBook;
@@ -11,29 +14,54 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 
-/*
- * Используется для добавления книги в библиотеку (Вывода ее на экран).
- * 
- * Добавление книги в библиотеку состоит из следующих действий
- * 1: Приведение электронной книги к общему формату
- * 2: Преобразование книги из общего формата к формату вывода на экран
- * 
- * Добавление в библиотеку - долгий процесс.
- * Он проходит в отдельном потоке и сопровождается выводом на экран полосы прогресса.
- */
 public class LibraryManager {
 	private ProgressDialog pd;
+	private Db4oProvider provider;
+	private Context context;
 	
 	public LibraryManager() {
 		
 	}
 	
 	public void addToLibrary(Context context, String filename, ReaderSurface surface) {
+		this.context = context;
+
 		pd = createProgressDialog(context);
 		pd.show();
+		
+		provider = new Db4oProvider(context);
 
 		AddToLibraryTask task = new AddToLibraryTask(filename, surface);
 		task.execute();
+	}
+	
+	public void showBook(Context context, String name, ReaderSurface surface) {
+		ReaderSettings settings = surface.getSettings();
+		Reader reader = surface.getReader();
+		
+		DbBook queryBook = new DbBook();
+		queryBook.name = name;
+		ArrayList<DbBook> books = (ArrayList<DbBook>) provider.getRecord(queryBook);
+		
+		if(books.size() > 0) {
+			DbBook book = books.get(0);
+			
+			float readerBookX = 0.0f;
+			float readerBookY = 0.0f;
+
+			ArrayList<ReaderBook> readerBooks = reader.getBooks();
+			int booksCount = readerBooks.size();
+			if(booksCount > 0) {
+				ReaderBook lastBook = readerBooks.get(booksCount - 1);
+				readerBookX = lastBook.getAbsoluteX() + lastBook.getWidth() + settings.getScreenWidth();
+				readerBookY = lastBook.getAbsoluteY();
+			}
+			
+			ReaderBook readerBook = ReaderBookCreator.createReaderBook(book, settings, readerBookX, readerBookY);
+			reader.addBook(readerBook);
+		} else {
+			System.out.println("Книга не найдена!");
+		}
 	}
 	
 	private ProgressDialog createProgressDialog(Context context) {
@@ -46,6 +74,26 @@ public class LibraryManager {
 		return pd;
 	}
 	
+	private String genRandomString() {
+		char[] chars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
+		StringBuilder sb = new StringBuilder();
+		Random random = new Random();
+		for (int i = 0; i < 20; i++) {
+			char c = chars[random.nextInt(chars.length)];
+			sb.append(c);
+		}
+		String output = sb.toString();
+		return output;
+	}
+	
+	private ArrayList<String> cloneArrayList(ArrayList<String> list) {
+		ArrayList<String> newList = new ArrayList<String>();
+		for(int i = 0; i < list.size(); i++) {
+			newList.add(new String(list.get(i)));
+		}
+		return newList;
+	}
+	
 	class AddToLibraryTask extends AsyncTask<String, Integer, Void> {
 		String filename;
 		ReaderSettings settings;
@@ -54,7 +102,6 @@ public class LibraryManager {
 		public AddToLibraryTask(String _filename, ReaderSurface _surface) {
 			filename = _filename;
 			settings = _surface.getSettings();
-			reader = _surface.getReader();
 		}
 		
 		@Override
@@ -71,24 +118,11 @@ public class LibraryManager {
 				System.out.println("Ошибка при парсинге книги");
 				return null;
 			}
-
-			// Поиск позиции для новой книги
-			float readerBookX = 0.0f;
-			float readerBookY = 0.0f;
-
-			ArrayList<ReaderBook> books = reader.getBooks();
-			int booksCount = books.size();
-			if(booksCount > 0) {
-				ReaderBook lastBook = books.get(booksCount - 1);
-				readerBookX = lastBook.getAbsoluteX() + lastBook.getWidth() + settings.getScreenWidth();
-				readerBookY = lastBook.getAbsoluteY();
-			}
 			
 			pd.setIndeterminate(false);
 			
-			// Создание книги, отображаемой на экране
-			ReaderBook readerBook = ReaderBookCreator.createReaderBook(book, settings, readerBookX, readerBookY, this);
-			reader.addBook(readerBook);
+			addBookToDb(book, filename);
+			
 			return null;
 		}
 
@@ -106,6 +140,28 @@ public class LibraryManager {
 		
 		public void publish(int value) {
 			publishProgress(value);
+		}
+		
+		public void addBookToDb(Book book, String filename) {
+			DbBook dbBook = new DbBook();
+			
+			if(book.titles.size() > 0) {
+				dbBook.name = book.titles.get(0);
+			} else {
+				dbBook.name = filename;
+			}
+			
+			dbBook.parsedTextPath = genRandomString();
+			dbBook.titles = cloneArrayList(book.titles);
+			dbBook.dates = cloneArrayList(book.dates);
+			dbBook.creators = cloneArrayList(book.creators);
+			dbBook.contributors = cloneArrayList(book.contributors);
+			dbBook.publishers = cloneArrayList(book.publishers);
+			dbBook.descriptions = cloneArrayList(book.descriptions);
+			
+			ReaderBookCreator.createParsedTextFile(book, dbBook.parsedTextPath, settings, this, context);
+			
+			provider.store(dbBook);
 		}
 	}
 }
