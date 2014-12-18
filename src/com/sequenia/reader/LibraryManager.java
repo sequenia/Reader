@@ -14,6 +14,14 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 
+/**
+ * @author chybakut2004
+ *
+ * Управляет библиотекой книг:
+ * 1. Добавляет книги в библиотеку
+ * 2. Показывает книги из библиотеки на экране
+ *
+ */
 public class LibraryManager {
 	private ProgressDialog pd;
 	private Db4oProvider provider;
@@ -23,6 +31,15 @@ public class LibraryManager {
 		
 	}
 	
+	/**
+	 * @param context
+	 * @param filename
+	 * @param surface
+	 * 
+	 * Добавляет книгу в библиотеку.
+	 * Производит парсинг электронного формата книги, приводит его ко внутреннему формату,
+	 * и сохраняет книгу в базе данных.
+	 */
 	public void addToLibrary(Context context, String filename, ReaderSurface surface) {
 		this.context = context;
 
@@ -35,10 +52,18 @@ public class LibraryManager {
 		task.execute();
 	}
 	
+	/**
+	 * @param context
+	 * @param name
+	 * @param surface
+	 * 
+	 * Показывает книгу из базы данных на экране
+	 */
 	public void showBook(Context context, String name, ReaderSurface surface) {
 		ReaderSettings settings = surface.getSettings();
 		Reader reader = surface.getReader();
 		
+		// Ищем книгу с указанным именем в БД
 		DbBook queryBook = new DbBook();
 		queryBook.name = name;
 		ArrayList<DbBook> books = (ArrayList<DbBook>) provider.getRecord(queryBook);
@@ -46,6 +71,7 @@ public class LibraryManager {
 		if(books.size() > 0) {
 			DbBook book = books.get(0);
 			
+			// Ищем координаты, в которых показать книгу
 			float readerBookX = 0.0f;
 			float readerBookY = 0.0f;
 
@@ -57,6 +83,7 @@ public class LibraryManager {
 				readerBookY = lastBook.getAbsoluteY();
 			}
 			
+			// Создаем рисуемую на экране книгу
 			ReaderBook readerBook = ReaderBookCreator.createReaderBook(book, settings, readerBookX, readerBookY);
 			reader.addBook(readerBook);
 		} else {
@@ -111,7 +138,7 @@ public class LibraryManager {
 	
 		@Override
 		protected Void doInBackground(String... params) {
-			// Приведение книги к общему виду
+			// Приводим книгу к общему внутреннему виду
 			Book book = BookParser.construct(filename).parse();
 			
 			if(book == null) {
@@ -121,6 +148,7 @@ public class LibraryManager {
 			
 			pd.setIndeterminate(false);
 			
+			// Добавляем эту книгу в базу данных
 			addBookToDb(book, filename);
 			
 			return null;
