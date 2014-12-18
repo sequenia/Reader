@@ -4,14 +4,14 @@ import java.util.ArrayList;
 
 import android.graphics.Paint;
 
-import com.sequenia.parsers.Book;
-import com.sequenia.parsers.Book.BookPage;
-import com.sequenia.parsers.Book.PageElem;
-import com.sequenia.parsers.Book.PageText;
 import com.sequenia.reader.LibraryManager.AddToLibraryTask;
-import com.sequenia.reader_objects.ReaderBook;
-import com.sequenia.reader_objects.ReaderPage;
-import com.sequenia.reader_objects.ReaderText;
+import com.sequenia.reader.parsers.Book;
+import com.sequenia.reader.parsers.Book.BookPage;
+import com.sequenia.reader.parsers.Book.PageElem;
+import com.sequenia.reader.parsers.Book.PageText;
+import com.sequenia.reader.reader_objects.ReaderBook;
+import com.sequenia.reader.reader_objects.ReaderPage;
+import com.sequenia.reader.reader_objects.ReaderText;
 
 /*
  * Используется для преобразования книги класса Book в формат, отображаемый на экране.

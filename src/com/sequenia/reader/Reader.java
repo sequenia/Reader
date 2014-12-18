@@ -2,11 +2,11 @@ package com.sequenia.reader;
 
 import java.util.ArrayList;
 
-import com.sequenia.parsers.Book;
-import com.sequenia.reader_objects.ReaderBook;
-import com.sequenia.reader_objects.ReaderPage;
-import com.sequenia.reader_objects.ReaderText;
-import com.sequenia.surface.ReaderSurface.ReaderMode;
+import com.sequenia.reader.parsers.Book;
+import com.sequenia.reader.reader_objects.ReaderBook;
+import com.sequenia.reader.reader_objects.ReaderPage;
+import com.sequenia.reader.reader_objects.ReaderText;
+import com.sequenia.reader.surface.ReaderSurface.ReaderMode;
 
 import android.graphics.Canvas;
 

@@ -1,6 +1,6 @@
 package com.sequenia.reader;
 
-import com.sequenia.surface.ReaderSurface;
+import com.sequenia.reader.surface.ReaderSurface;
 
 import android.support.v7.app.ActionBarActivity;
 import android.content.Context;

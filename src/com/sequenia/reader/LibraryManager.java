@@ -2,10 +2,10 @@ package com.sequenia.reader;
 
 import java.util.ArrayList;
 
-import com.sequenia.parsers.Book;
-import com.sequenia.parsers.BookParser;
-import com.sequenia.reader_objects.ReaderBook;
-import com.sequenia.surface.ReaderSurface;
+import com.sequenia.reader.parsers.Book;
+import com.sequenia.reader.parsers.BookParser;
+import com.sequenia.reader.reader_objects.ReaderBook;
+import com.sequenia.reader.surface.ReaderSurface;
 
 import android.app.ProgressDialog;
 import android.content.Context;
