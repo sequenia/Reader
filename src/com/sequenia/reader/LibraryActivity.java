@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.sequenia.db.Db4oProvider;
+import com.sequenia.db.DbBook;
+
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.widget.ListAdapter;

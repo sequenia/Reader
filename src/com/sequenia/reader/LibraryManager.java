@@ -2,6 +2,11 @@ package com.sequenia.reader;
 
 import java.util.ArrayList;
 
+import com.sequenia.parsers.Book;
+import com.sequenia.parsers.BookParser;
+import com.sequenia.reader_objects.ReaderBook;
+import com.sequenia.surface.ReaderSurface;
+
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;

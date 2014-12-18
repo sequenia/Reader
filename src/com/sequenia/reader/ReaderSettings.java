@@ -7,66 +7,66 @@ import android.graphics.Paint;
  * Настройки читалки и элементы по умолчанию
  */
 public class ReaderSettings {
-	Paint bgPaint;
+	public Paint bgPaint;
 	private int bgColor = Color.WHITE;
 	
-	Paint textPaint;
+	public Paint textPaint;
 	private int textColor = Color.BLACK;
-	float textSize = 25.0f;
-	float pagePadding = 25.0f;
-	float linesMargin = 5.0f;
+	public float textSize = 25.0f;
+	public float pagePadding = 25.0f;
+	public float linesMargin = 5.0f;
 	
-	Paint fakeTextPaint;
+	public Paint fakeTextPaint;
 	private int fakeTextColor = Color.rgb(159, 199, 159);
 	
-	Paint minInfoPaint;
+	public Paint minInfoPaint;
 	private int minInfoColor = Color.BLACK;
 	private float minInfoSize = 700.0f;
 	
-	Paint fullInfoPaint;
+	public Paint fullInfoPaint;
 	private int fullInfoColor = Color.BLACK;
 	private float fullInfoSize = 350.0f;
 	
-	Paint pageBorderPaint;
+	public Paint pageBorderPaint;
 	private int pageBorderColor = Color.GRAY;
 	public float pageBorderSize = 1.0f;
 	
-	Paint currentPageBorderPaint;
+	public Paint currentPageBorderPaint;
 	private int currentPageBorderColor = Color.GRAY;
 	public float currentPageBorderSize = 3.0f;
 	
-	Paint bookPagesBorderPaint;
+	public Paint bookPagesBorderPaint;
 	private int bookPagesBorderColor = Color.GRAY;
 	public float bookPagesBorderSize = 3.0f;
 	
-	Paint bookBorderPaint;
+	public Paint bookBorderPaint;
 	private int bookBorderColor = Color.GRAY;
 	public float bookBorderSize = 1.0f;
 	
-	Paint pageBgPaint;
+	public Paint pageBgPaint;
 	private int pageBgColor = Color.rgb(228, 255, 233);
 	
-	Paint readPageBgPaint;
+	public Paint readPageBgPaint;
 	private int readPageBgColor = Color.rgb(179, 255, 191);
 	
-	Paint currentPageBgPaint;
+	public Paint currentPageBgPaint;
 	private int currentPageBgColor = Color.rgb(112, 221, 129);
 	
-	float stopAccel = -3000.0f;
-	float scaleAccel = 0.01f;
-	float accelScaleSensivity = 1.5f;
-	float toReadModeSensivity = 0.6f;
-	float toReadTime = 0.2f;
-	float pageSlideTime = 0.1f;
-	float pageSlideSensivity = 0.2f;
+	public float stopAccel = -3000.0f;
+	public float scaleAccel = 0.01f;
+	public float accelScaleSensivity = 1.5f;
+	public float toReadModeSensivity = 0.6f;
+	public float toReadTime = 0.2f;
+	public float pageSlideTime = 0.1f;
+	public float pageSlideSensivity = 0.2f;
 	
-	float maxScaleVelocity = 30.0f;
-	float minScaleVelocity = 1.0f / maxScaleVelocity;
+	public float maxScaleVelocity = 30.0f;
+	public float minScaleVelocity = 1.0f / maxScaleVelocity;
 	
 	private float screenWidth = 0.0f;
 	private float screenHeight = 0.0f;
-	float halfScreenWidth = 0.0f;
-	float halfScreenHeight = 0.0f;
+	public float halfScreenWidth = 0.0f;
+	public float halfScreenHeight = 0.0f;
 
 	public ReaderSettings() {
 		initPaint();
