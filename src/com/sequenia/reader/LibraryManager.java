@@ -123,7 +123,6 @@ public class LibraryManager {
 	public class AddToLibraryTask extends AsyncTask<String, Integer, Void> {
 		String filename;
 		ReaderSettings settings;
-		Reader reader;
 
 		public AddToLibraryTask(String _filename, ReaderSurface _surface) {
 			filename = _filename;
