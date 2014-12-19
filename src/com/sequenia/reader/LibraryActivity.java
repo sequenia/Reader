@@ -31,7 +31,7 @@ public class LibraryActivity extends ListActivity {
 		
 		provider = new Db4oProvider(this);
 
-		showBooks(provider.findAll());
+		showBooks(provider.findAllBooks());
 	}
 	
 	private void showBooks(List<DbBook> books) {

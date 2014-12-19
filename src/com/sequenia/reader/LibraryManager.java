@@ -1,7 +1,6 @@
 package com.sequenia.reader;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import com.sequenia.reader.db.Db4oProvider;
@@ -15,6 +14,7 @@ import com.sequenia.reader.surface.ReaderSurface;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 
 /**
  * @author chybakut2004
@@ -65,14 +65,9 @@ public class LibraryManager {
 		
 		provider = new Db4oProvider(context);
 		
-		// Ищем книгу с указанным именем в БД
-		DbBook queryBook = new DbBook();
-		queryBook.name = name;
-		List<DbBook> books = provider.getRecord(queryBook);
+		DbBook book = provider.findByName(name);
 		
-		if(!books.isEmpty()) {
-			DbBook book = books.get(0);
-			
+		if(book != null) {
 			// Ищем координаты, в которых показать книгу
 			float readerBookX = 0.0f;
 			float readerBookY = 0.0f;
@@ -191,9 +186,12 @@ public class LibraryManager {
 			dbBook.publishers = cloneArrayList(book.publishers);
 			dbBook.descriptions = cloneArrayList(book.descriptions);
 			
-			BookContentParser.createParsedTextFile(book, dbBook.parsedTextPath, settings, this, context);
-			
-			provider.store(dbBook);
+			try {
+				provider.storeBook(dbBook);
+				BookContentParser.createParsedTextFile(book, dbBook.parsedTextPath, settings, this, context);
+			} catch (Exception e) {
+				Log.e("ОШИБКА", e.toString());
+			}
 		}
 	}
 }
