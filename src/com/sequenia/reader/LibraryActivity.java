@@ -18,8 +18,16 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
+/**
+ * @author chybakut2004
+ *
+ * Экран библиотеки.
+ * Необходим для просмотра книг в библиотеке и добавления их на экран чтения.
+ * 
+ * Имеет кнопки управления библиотекой - удалить все книги, удалить базу данных и т.д.
+ *
+ */
 public class LibraryActivity extends ListActivity {
-	
 	Db4oProvider provider;
 	ArrayList<HashMap<String, Object>> booksList;
 	ListView listView;

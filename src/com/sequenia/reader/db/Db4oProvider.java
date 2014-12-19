@@ -5,6 +5,12 @@ import java.util.List;
 
 import android.content.Context;
 
+/**
+ * @author chybakut2004
+ * 
+ * Предоставляет доступ к базе денных книжек
+ *
+ */
 public class Db4oProvider extends Db4oHelper {
 
 	private static Db4oProvider provider = null;

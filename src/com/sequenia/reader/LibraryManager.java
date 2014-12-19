@@ -19,9 +19,13 @@ import android.util.Log;
 /**
  * @author chybakut2004
  *
- * Управляет библиотекой книг:
- * 1. Добавляет книги в библиотеку
- * 2. Показывает книги из библиотеки на экране
+ * Управляет библиотекой читалки
+ * 
+ * 1. Парсит книгу и добавляет ее в БД
+ * new LibraryManager(context).addToLibrary(pathToBook, surface);
+ * 
+ * 2. Добавляет книгу из БД на экран чтения
+ * new LibraryManager(context).showBook(bookNameInBd, surface);
  *
  */
 public class LibraryManager {
@@ -41,6 +45,9 @@ public class LibraryManager {
 	 * Добавляет книгу в библиотеку.
 	 * Производит парсинг электронного формата книги, приводит его ко внутреннему формату,
 	 * и сохраняет книгу в базе данных.
+	 * 
+	 * Это долгий процесс, который выполняется в отдельном потоке с выводом процесса выполнения
+	 * в ProgressDialog
 	 */
 	public void addToLibrary(String filename, ReaderSurface surface) {
 		pd = createProgressDialog(context);
@@ -57,7 +64,7 @@ public class LibraryManager {
 	 * @param name
 	 * @param surface
 	 * 
-	 * Показывает книгу из базы данных на экране
+	 * Показывает книгу из базы данных на экране чтения
 	 */
 	public void showBook(String name, ReaderSurface surface) {
 		ReaderSettings settings = surface.getSettings();
@@ -68,20 +75,8 @@ public class LibraryManager {
 		DbBook book = provider.findByName(name);
 		
 		if(book != null) {
-			// Ищем координаты, в которых показать книгу
-			float readerBookX = 0.0f;
-			float readerBookY = 0.0f;
-
-			ArrayList<ReaderBook> readerBooks = reader.getBooks();
-			int booksCount = readerBooks.size();
-			if(booksCount > 0) {
-				ReaderBook lastBook = readerBooks.get(booksCount - 1);
-				readerBookX = lastBook.getAbsoluteX() + lastBook.getWidth() + settings.getScreenWidth();
-				readerBookY = lastBook.getAbsoluteY();
-			}
-			
-			// Создаем рисуемую на экране книгу
-			ReaderBook readerBook = ReaderBookCreator.createReaderBook(context, book, settings, readerBookX, readerBookY);
+			// Создаем рисуемую на экране книгу, заполняя обложку и добавляя страницы
+			ReaderBook readerBook = ReaderBookCreator.createReaderBook(context, book, settings, reader);
 			if(readerBook != null) {
 				reader.addBook(readerBook);
 			}
@@ -120,6 +115,11 @@ public class LibraryManager {
 		return newList;
 	}
 	
+	/**
+	 * @author chybakut2004
+	 *
+	 * Используется для добавления книги в БД в отдельном потоке
+	 */
 	public class AddToLibraryTask extends AsyncTask<String, Integer, Void> {
 		String filename;
 		ReaderSettings settings;
@@ -168,7 +168,14 @@ public class LibraryManager {
 			publishProgress(value);
 		}
 		
+		/**
+		 * @param book
+		 * @param filename
+		 * 
+		 * Добавляет книгу book в базу данных. Если у нее нет имени, ей присваивается имя файла
+		 */
 		public void addBookToDb(Book book, String filename) {
+			// Создаем объект для сохранения в БД
 			DbBook dbBook = new DbBook();
 			
 			if(book.titles.size() > 0) {
@@ -177,7 +184,10 @@ public class LibraryManager {
 				dbBook.name = filename;
 			}
 			
+			// Генерируем имя файла, в котором будет лежать текст книги
 			dbBook.parsedTextPath = genRandomString();
+			
+			// Заполняем информацию о книге
 			dbBook.titles = cloneArrayList(book.titles);
 			dbBook.dates = cloneArrayList(book.dates);
 			dbBook.creators = cloneArrayList(book.creators);
@@ -186,7 +196,9 @@ public class LibraryManager {
 			dbBook.descriptions = cloneArrayList(book.descriptions);
 			
 			try {
+				// Записываем книгу в БД
 				provider.storeBook(dbBook);
+				// Преобразовываем текст книги в формат для хранения и записываем его в текстовый файл
 				BookContentParser.createParsedTextFile(book, dbBook.parsedTextPath, settings, this, context);
 			} catch (Exception e) {
 				Log.e("ОШИБКА", e.toString());

@@ -15,14 +15,50 @@ import com.sequenia.reader.reader_objects.ReaderBook;
 import com.sequenia.reader.reader_objects.ReaderPage;
 import com.sequenia.reader.reader_objects.ReaderText;
 
+/**
+ * @author chybakut2004
+ *
+ * По информации из БД создает книгу, рисуемую на экране.
+ * Этот процесс состоит из нескольких этапов:
+ * 1. Поиск координаты, в которую поместить книгу
+ * 2. Заполнение обложки книги (Название, автор и т.д)
+ * 3. Считывание текста книги из файла, разбиение его на страницы
+ * 4. Заполнение книги страницами
+ * 5. Передача книги на отрисовку
+ * 
+ * Текст в файле хранится уже в преобразованном виде по строкам, влезающим в экран.
+ * Формат файла описан в классе BookContentParser
+ */
 public class ReaderBookCreator {
 	
-	public static ReaderBook createReaderBook(Context context, DbBook book, ReaderSettings settings, float x, float y) {
+	/**
+	 * @param context
+	 * @param book
+	 * @param settings
+	 * @param reader
+	 * @return
+	 * 
+	 * Создает рисуемую книгу и помещает ее на экран
+	 */
+	public static ReaderBook createReaderBook(Context context, DbBook book, ReaderSettings settings, Reader reader) {
 		System.out.println("Преобразование книги к отображаемому формату...");
+
+		// Ищем координаты, в которых показать книгу
+		float readerBookX = 0.0f;
+		float readerBookY = 0.0f;
+
+		// Задаем координаты книги
+		ArrayList<ReaderBook> readerBooks = reader.getBooks();
+		int booksCount = readerBooks.size();
+		if(booksCount > 0) {
+			ReaderBook lastBook = readerBooks.get(booksCount - 1);
+			readerBookX = lastBook.getAbsoluteX() + lastBook.getWidth() + settings.getScreenWidth();
+			readerBookY = lastBook.getAbsoluteY();
+		}
 		
 		ReaderBook readerBook = new ReaderBook(settings);
+		readerBook.setPosition(readerBookX, readerBookY);
 
-		readerBook.setPosition(x, y);
 		System.out.println("Задание информации на обложке...");
 		setBookInfo(readerBook, book, settings);
 		System.out.println("Задание информации на обложке завершено");
@@ -60,6 +96,7 @@ public class ReaderBookCreator {
 	private static ArrayList<ReaderPage> createPages(DbBook book, ReaderSettings settings, Context context) {
 		ArrayList<ReaderPage> readerPages = new ArrayList<ReaderPage>();
 		
+		// Получаем информацию о страницах - размеры, отступы и т.д.
 		float pageWidth = settings.getScreenWidth();
 		float pageHeight = settings.getScreenHeight();
 		float textStartY = settings.pagePadding + settings.textSize;
@@ -67,6 +104,7 @@ public class ReaderBookCreator {
 		float doubleLinesMargin = settings.linesMargin * 2.0f;
 		float currentContentHeight;
 		
+		// Считываем текст книги, дробя его на страницы
 		InputStream is = null;
 		try {
 			is = new BufferedInputStream(context.openFileInput(book.parsedTextPath));
@@ -77,6 +115,9 @@ public class ReaderBookCreator {
 			ReaderPage readerPage = new ReaderPage(pageWidth, pageHeight, settings);
 			currentContentHeight = 0.0f;
 			try {
+				// Читаем текст по строкам
+				// Первый символ в строке - тип строки
+				// В зависимости от него производим различные действия
 				while((c = reader.read()) != -1) {
 					line = reader.readLine();
 					if(line == null) {
@@ -84,6 +125,7 @@ public class ReaderBookCreator {
 					}
 					
 					switch ((char)c) {
+					// Добавляем строку в страницу
 					case 's':
 						ReaderText readerText = new ReaderText(line);
 						readerText.setPaint(settings.textPaint);
@@ -98,7 +140,8 @@ public class ReaderBookCreator {
 							currentContentHeight = 0.0f;
 						}
 						break;
-						
+					
+					// Создаем новую страницу
 					case 'p':
 						readerPages.add(readerPage);
 						readerPage = new ReaderPage(pageWidth, pageHeight, settings);
@@ -125,6 +168,14 @@ public class ReaderBookCreator {
 		return readerPages;
 	}
 	
+	/**
+	 * @param readerBook
+	 * @param pages
+	 * @param settings
+	 * 
+	 * Добавляет страницы из массива страниц в рисуемую на экране книгу.
+	 * Располагает их внутри книги
+	 */
 	private static void addPagesToReaderBook(ReaderBook readerBook, ArrayList<ReaderPage> pages, ReaderSettings settings) {
 		int pagesCount = pages.size();
 		int pagesPerLine = (int) Math.ceil(Math.sqrt(pagesCount));

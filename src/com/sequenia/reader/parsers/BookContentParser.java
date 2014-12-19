@@ -13,12 +13,41 @@ import com.sequenia.reader.parsers.Book.BookPage;
 import com.sequenia.reader.parsers.Book.PageElem;
 import com.sequenia.reader.parsers.Book.PageText;
 
+/**
+ * @author chybakut2004
+ *
+ * Используется для приведения книги к формату хранения и записи ее в текстовый файл.
+ * Формат имеет следующий вид:
+ * 
+ * aLine1\n
+ * aLine2\n
+ * aLine3\n
+ * ...
+ * ...
+ * 
+ * где a - тип строки. Указывает на то, какую нагрузку несет следующая строка
+ *     Line1, Line2, Line3 - строки
+ *     
+ * a может иметь значения:
+ * 's' - Строка текста, помешающаяся в экран
+ * 'p' - Сигнал о создании новой страницы
+ * 
+ */
 public class BookContentParser {
 
 	public static enum LexemeType {
 		WORD, SPACES, NEW_LINE, SIGN, EMPTY
 	}
 
+	/**
+	 * @param book
+	 * @param parsedTextPath
+	 * @param settings
+	 * @param task
+	 * @param context
+	 * 
+	 * Преобразует книгу к формату хранения и записывает ее в файл
+	 */
 	public static void createParsedTextFile(Book book, String parsedTextPath,
 			ReaderSettings settings, AddToLibraryTask task, Context context) {
 		float pageWidth = settings.getScreenWidth();
@@ -47,6 +76,7 @@ public class BookContentParser {
 							PageText pageText = (PageText) elem;
 							StringBuilder text = new StringBuilder(pageText.text);
 							
+							// Достаем по строчке, которая вмещается в экран
 							while(text.length() != 0) {
 								String line = getNextLine(text, settings.textPaint, pageContentWidth).toString();
 								outputStream.write(line.getBytes());

@@ -9,6 +9,12 @@ import com.db4o.config.EmbeddedConfiguration;
 import android.content.Context;
 import android.util.Log;
 
+/**
+ * @author chybakut2004
+ * 
+ * Хелпер для доступа к БД и ее настройки
+ *
+ */
 public class Db4oHelper {
 	private Context context;
 	private static ObjectContainer oc = null;
