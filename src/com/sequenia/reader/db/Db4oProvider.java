@@ -47,7 +47,16 @@ public class Db4oProvider extends Db4oHelper {
 		}
 	}
 	
-	public void deletBook(DbBook book) {
+	public void deleteBook(DbBook book) {
+		
+		if(book.parsedTextPath != null) {
+			File dir = getContext().getFilesDir();
+			File text = new File(dir, book.parsedTextPath);
+			if(text.exists()) {
+				text.delete();
+			}
+		}
+		
 		db().delete(book);
 		db().commit();
 	}
@@ -71,11 +80,28 @@ public class Db4oProvider extends Db4oHelper {
 		}
 	}
 	
+	public void deleteAllBooks() {
+		List<DbBook> books = findAllBooks();
+		for(DbBook b : books) {
+			deleteBook(b);
+		}
+	}
+	
 	public void deleteDatabase() {
 		try {
 			db().close();
 			File file = new File(getContext().getDir("data", 0), getDbName());
 			file.delete();
+			
+			File dir = getContext().getFilesDir();
+			String[] files = dir.list();
+			for(int i = 0; i < files.length; i++) {
+				File dirFile = new File(dir, files[i]);
+				if(!dirFile.isDirectory()) {
+					dirFile.delete();
+				}
+			}
+			
 		} catch (NullPointerException e) {
 		}
 	}

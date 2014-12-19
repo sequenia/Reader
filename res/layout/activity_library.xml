@@ -1,23 +1,45 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"  
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"  
     xmlns:tools="http://schemas.android.com/tools"  
     android:layout_width="match_parent"  
     android:layout_height="match_parent"  
-    android:background="@drawable/listview_shape"  
     android:orientation="vertical"
     tools:context=".LibraryActivity" >  
+    
+    <Button  
+	    android:id="@+id/clear_library_button"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:text="@string/clear_library"
+	    android:onClick="deleteBooks" />
+    
+    <Button  
+	    android:id="@+id/delete_db_button"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@+id/clear_library_button"
+	    android:text="@string/delete_db"
+	    android:onClick="deleteDatabase" />
 
-    <TextView  
-        android:background="@drawable/shape_head"  
-        android:layout_width="match_parent"  
-        android:layout_height="30dp"  
-        android:gravity="center"  
-        android:textColor="#fff"  
-        android:textSize="18sp"  
-        android:text="@string/books" />  
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/delete_db_button">
 
-    <ListView  
-        android:id="@android:id/list"
-        android:layout_width="match_parent"  
-        android:layout_height="wrap_content" >  
-    </ListView>  
-</LinearLayout>  
+        <TextView  
+	        android:background="@drawable/shape_head"  
+	        android:layout_width="match_parent"  
+	        android:layout_height="30dp"  
+	        android:gravity="center"  
+	        android:textColor="#fff"  
+	        android:textSize="18sp"  
+	        android:text="@string/books" />  
+
+	    <ListView  
+	        android:id="@android:id/list"
+	        android:layout_width="match_parent"  
+	        android:layout_height="wrap_content" >  
+    	</ListView>
+    </LinearLayout>
+</RelativeLayout>  

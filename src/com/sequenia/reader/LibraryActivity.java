@@ -61,4 +61,14 @@ public class LibraryActivity extends ListActivity {
 			}
 		});
 	}
+	
+	public void deleteDatabase(View v) {
+		provider.deleteDatabase();
+		showBooks(provider.findAllBooks());
+	}
+	
+	public void deleteBooks(View v) {
+		provider.deleteAllBooks();
+		showBooks(provider.findAllBooks());
+	}
 }
