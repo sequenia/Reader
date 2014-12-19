@@ -1,11 +1,13 @@
 package com.sequenia.reader;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.sequenia.reader.db.Db4oProvider;
 import com.sequenia.reader.db.DbBook;
 import com.sequenia.reader.parsers.Book;
+import com.sequenia.reader.parsers.BookContentParser;
 import com.sequenia.reader.parsers.BookParser;
 import com.sequenia.reader.reader_objects.ReaderBook;
 import com.sequenia.reader.surface.ReaderSurface;
@@ -27,8 +29,8 @@ public class LibraryManager {
 	private Db4oProvider provider;
 	private Context context;
 	
-	public LibraryManager() {
-		
+	public LibraryManager(Context context) {
+		this.context = context;
 	}
 	
 	/**
@@ -40,9 +42,7 @@ public class LibraryManager {
 	 * Производит парсинг электронного формата книги, приводит его ко внутреннему формату,
 	 * и сохраняет книгу в базе данных.
 	 */
-	public void addToLibrary(Context context, String filename, ReaderSurface surface) {
-		this.context = context;
-
+	public void addToLibrary(String filename, ReaderSurface surface) {
 		pd = createProgressDialog(context);
 		pd.show();
 		
@@ -59,16 +59,18 @@ public class LibraryManager {
 	 * 
 	 * Показывает книгу из базы данных на экране
 	 */
-	public void showBook(Context context, String name, ReaderSurface surface) {
+	public void showBook(String name, ReaderSurface surface) {
 		ReaderSettings settings = surface.getSettings();
 		Reader reader = surface.getReader();
+		
+		provider = new Db4oProvider(context);
 		
 		// Ищем книгу с указанным именем в БД
 		DbBook queryBook = new DbBook();
 		queryBook.name = name;
-		ArrayList<DbBook> books = (ArrayList<DbBook>) provider.getRecord(queryBook);
+		List<DbBook> books = provider.getRecord(queryBook);
 		
-		if(books.size() > 0) {
+		if(!books.isEmpty()) {
 			DbBook book = books.get(0);
 			
 			// Ищем координаты, в которых показать книгу
@@ -84,8 +86,10 @@ public class LibraryManager {
 			}
 			
 			// Создаем рисуемую на экране книгу
-			ReaderBook readerBook = ReaderBookCreator.createReaderBook(book, settings, readerBookX, readerBookY);
-			reader.addBook(readerBook);
+			ReaderBook readerBook = ReaderBookCreator.createReaderBook(context, book, settings, readerBookX, readerBookY);
+			if(readerBook != null) {
+				reader.addBook(readerBook);
+			}
 		} else {
 			System.out.println("Книга не найдена!");
 		}
@@ -121,7 +125,7 @@ public class LibraryManager {
 		return newList;
 	}
 	
-	class AddToLibraryTask extends AsyncTask<String, Integer, Void> {
+	public class AddToLibraryTask extends AsyncTask<String, Integer, Void> {
 		String filename;
 		ReaderSettings settings;
 		Reader reader;
@@ -187,7 +191,7 @@ public class LibraryManager {
 			dbBook.publishers = cloneArrayList(book.publishers);
 			dbBook.descriptions = cloneArrayList(book.descriptions);
 			
-			ReaderBookCreator.createParsedTextFile(book, dbBook.parsedTextPath, settings, this, context);
+			BookContentParser.createParsedTextFile(book, dbBook.parsedTextPath, settings, this, context);
 			
 			provider.store(dbBook);
 		}

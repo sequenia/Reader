@@ -2,8 +2,8 @@ package com.sequenia.reader.reader_objects;
 
 import java.util.ArrayList;
 
-import com.sequenia.reader.ReaderBookCreator;
 import com.sequenia.reader.ReaderSettings;
+import com.sequenia.reader.parsers.BookContentParser;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -105,7 +105,7 @@ public class ReaderPage extends ReaderGroupWithSize {
 			float textSize = textPaint.getTextSize();
 			float x = line.getAbsoluteX();
 			float y = line.getAbsoluteY();
-			float width = ReaderBookCreator.getTextWidth(line.getText(), textPaint);
+			float width = BookContentParser.getTextWidth(line.getText(), textPaint);
 			float height = textSize / 2.0f;
 			
 			canvas.drawRect(x, y, x + width, y + height, paint);

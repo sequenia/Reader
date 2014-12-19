@@ -42,7 +42,7 @@ public class Db4oHelper {
 	  */
 	private EmbeddedConfiguration dbConfig() throws IOException {
 		EmbeddedConfiguration configuration = Db4oEmbedded.newConfiguration();
-
+		configuration.common().activationDepth(3);
 		return configuration;
 	}
 	

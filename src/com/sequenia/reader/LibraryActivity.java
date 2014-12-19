@@ -8,10 +8,15 @@ import com.sequenia.reader.db.Db4oProvider;
 import com.sequenia.reader.db.DbBook;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
 public class LibraryActivity extends ListActivity {
 	
@@ -25,6 +30,7 @@ public class LibraryActivity extends ListActivity {
 		setContentView(R.layout.activity_library);
 		
 		provider = new Db4oProvider(this);
+
 		showBooks(provider.findAll());
 	}
 	
@@ -42,5 +48,17 @@ public class LibraryActivity extends ListActivity {
 		
 		listView = getListView();
 		listView.setAdapter(adapter);
+		
+		listView.setOnItemClickListener(new OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position,
+					long id) {
+				String bookName = ((TextView) view.findViewById(R.id.tv_name)).getText().toString();
+				Intent returnIntent = new Intent();
+				returnIntent.putExtra("bookName", bookName);
+				setResult(RESULT_OK, returnIntent);
+				finish();
+			}
+		});
 	}
 }

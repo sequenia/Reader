@@ -57,7 +57,7 @@ public class MainActivity extends ActionBarActivity {
 			.setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
 				@Override
 				public void OnSelectedFile(String fileName) {
-					new LibraryManager().addToLibrary(context, fileName, surface);
+					new LibraryManager(context).addToLibrary(fileName, surface);
 				}
 			});
 			fileDialog.show();
@@ -65,10 +65,20 @@ public class MainActivity extends ActionBarActivity {
 			
 		case R.id.action_show_library:
 			Intent intent = new Intent(MainActivity.this, LibraryActivity.class);
-			startActivity(intent);
+			startActivityForResult(intent, 1);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if(requestCode == 1) {
+			if(resultCode == RESULT_OK) {
+				String bookName = data.getStringExtra("bookName");
+				new LibraryManager(this).showBook(bookName, surface);
+			}
+		}
 	}
 
 }

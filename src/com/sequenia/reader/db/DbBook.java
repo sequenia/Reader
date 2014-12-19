@@ -13,8 +13,8 @@ public class DbBook {
 	public ArrayList<String> descriptions;
 	
 	public DbBook() {
-		name = "";
-		parsedTextPath = "";
+		name = null;
+		parsedTextPath = null;
 
 		titles = new ArrayList<String>();
 		dates = new ArrayList<String>();
